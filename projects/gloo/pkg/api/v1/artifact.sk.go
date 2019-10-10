@@ -31,6 +31,9 @@ func (r *Artifact) SetMetadata(meta core.Metadata) {
 func (r *Artifact) Hash() uint64 {
 	metaCopy := r.GetMetadata()
 	metaCopy.ResourceVersion = ""
+	metaCopy.Generation = 0
+	// investigate zeroing out owner refs as well
+	metaCopy.Annotations = nil
 	return hashutils.HashAll(
 		metaCopy,
 		r.Data,

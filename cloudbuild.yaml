@@ -52,7 +52,7 @@ steps:
   waitFor: ['dep']
   id: 'check-code-and-docs-gen'
 
-# Run all the tests with ginkgo -r -failFast -trace -progress
+# Run all the tests with ginkgo -r -failFast -trace -progress --noColor
 # This requires setting up envoy, AWS, helm, and docker
 # The e2e-ginkgo container provides everything else needed for running tests
 - name: gcr.io/cloud-builders/gsutil
@@ -120,7 +120,7 @@ steps:
   - 'DOCKER_CONFIG=/workspace/.docker/'
   - 'HELM_HOME=/root/.helm'
   dir: './gopath/src/github.com/solo-io/gloo'
-  args: ['-r', '-failFast', '-trace', '-progress', '-race']
+  args: ['-r', '-failFast', '-trace', '-progress', '-race', '--noColor']
   waitFor: ['get-envoy', 'setup-aws-creds', 'fetch-helm', 'check-code-and-docs-gen', 'set-zone']
   secretEnv: ['AWS_ARN_ROLE_1']
   id: 'test'
@@ -157,7 +157,7 @@ steps:
     - 'HELM_HOME=/root/.helm'
     - 'TAGGED_VERSION=$TAG_NAME'
   dir: './gopath/src/github.com/solo-io/gloo'
-  waitFor: ['compile', 'docker-login']
+  waitFor: ['compile', 'docker-login', 'test']
   id: 'build-test-assets'
 - name: 'gcr.io/$PROJECT_ID/e2e-ginkgo:0.1.5'
   env:
@@ -167,7 +167,7 @@ steps:
     - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-roles'
     - 'RUN_KUBE2E_TESTS=1'
   dir: './gopath/src/github.com/solo-io/gloo'
-  args: ['-r', 'test/kube2e', '-failFast', '-trace', '-progress']
+  args: ['-r', '--noColor', '-failFast', '-trace', '-progress', 'test/kube2e']
   waitFor: ['build-test-assets', 'set-zone']
   id: 'regression-tests'
 - name: gcr.io/cloud-builders/gcloud
@@ -187,14 +187,13 @@ steps:
     - 'RUN_KUBE2E_TESTS=1'
     - 'CLUSTER_LOCK_TESTS=1'
   dir: './gopath/src/github.com/solo-io/gloo'
-  args: ['-r', 'test/kube2e', '-failFast', '-trace', '-progress']
+  args: ['-r', '--noColor', '-failFast', '-trace', '-progress', 'test/kube2e']
   waitFor: ['build-test-assets', 'get-credentials']
   id: 'regression-tests-cluster-lock'
 
-# 1) Run make targets to push docker images, compile manifests, produce release artifacts, deploy docs
-# 2) Publish helm chart
+# 1) Run make targets to push docker images
 - name: 'gcr.io/$PROJECT_ID/go-make:0.1.12'
-  args: ['docker-push', 'manifest', 'upload-github-release-assets', 'push-docs']
+  args: ['docker-push']
   env:
   - 'DOCKER_CONFIG=/workspace/docker-config'
   - 'TAGGED_VERSION=$TAG_NAME'
@@ -203,10 +202,21 @@ steps:
   - 'HELM_HOME=/root/.helm' # tell helm where to find data
   dir: './gopath/src/github.com/solo-io/gloo'
   secretEnv: ['GITHUB_TOKEN']
-  id: 'release'
-  # wait for everything else to compelete.
-
-# Sync helm chart data back to google storage bucket
+  id: 'release-images'
+# 2) Publish helm chart, compile manifests, produce release artifacts, deploy docs
+# isolating this portion of the release in order to force the manifest to be regenerated with the tagged version
+- name: 'gcr.io/$PROJECT_ID/go-make:0.1.12'
+  args: ['manifest', 'upload-github-release-assets', 'push-docs', '-B']
+  env:
+  - 'DOCKER_CONFIG=/workspace/docker-config'
+  - 'TAGGED_VERSION=$TAG_NAME'
+  - 'PROJECT_ROOT=github.com/solo-io/gloo'
+  - 'GOPATH=/workspace/gopath'
+  - 'HELM_HOME=/root/.helm' # tell helm where to find data
+  dir: './gopath/src/github.com/solo-io/gloo'
+  secretEnv: ['GITHUB_TOKEN']
+  id: 'release-chart'
+# 3) Sync helm chart data back to google storage bucket
 - name: 'gcr.io/$PROJECT_ID/go-make:0.1.12'
   args: ['save-helm']
   env:
@@ -223,7 +233,7 @@ secrets:
     QUAY_IO_PASSWORD: CiQABlzmSRx5TcOqbldXa/d/+bkmAfpNAWa3PTS06WvuloZL+vASaQCCPGSGCogonVZVEUNx4G3YJtWi18gSuNx4PvLe08q8xAflTMFkjsyQirAOK3Y2oCvgYwiw/ITcuydjkpMjxDygFyENXS9FKFJoAXHlPQE5qidKr8xxmxF5ezhmjGB0gjyjXIIkbSEnBg==
     AWS_ARN_ROLE_1: CiQABlzmSTKWrIEGaH8UvsX3Wp8pz8ClQODVSjIZAiHuE9gNhM4SXACCPGSGCDSNJtdfkA0BLLmKTJLIM06XXEOV4iIooqlLfo9p7EOzOwqZaV9DFygO8/oKQqTFstc1vKgOz7YHrMaCx3GzqiHN2u//UmHRpvIwrDDfuIP5XNa0aOrj
 
-timeout: 3600s
+timeout: 4200s
 tags: ['gloo']
 options:
   machineType: 'N1_HIGHCPU_32'

@@ -6,24 +6,25 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/solo-io/go-utils/errors"
+
 	"github.com/solo-io/solo-kit/pkg/api/v1/resources"
 	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/pkg/errors"
 
 	v1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1"
 	v2 "github.com/solo-io/gloo/projects/gateway/pkg/api/v2"
 	gloov1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1"
 	glooutils "github.com/solo-io/gloo/projects/gloo/pkg/utils"
 	"github.com/solo-io/go-utils/contextutils"
-	"github.com/solo-io/solo-kit/pkg/api/v1/reporter"
 	"github.com/solo-io/solo-kit/pkg/api/v1/resources/core"
+	"github.com/solo-io/solo-kit/pkg/api/v2/reporter"
 )
 
 type HttpTranslator struct{}
 
-func (t *HttpTranslator) GenerateListeners(ctx context.Context, snap *v2.ApiSnapshot, filteredGateways []*v2.Gateway, resourceErrs reporter.ResourceErrors) []*gloov1.Listener {
+func (t *HttpTranslator) GenerateListeners(ctx context.Context, snap *v2.ApiSnapshot, filteredGateways []*v2.Gateway, reports reporter.ResourceReports) []*gloov1.Listener {
 	if len(snap.VirtualServices) == 0 {
 		contextutils.LoggerFrom(ctx).Debugf("%v had no virtual services", snap.Hash())
 		return nil
@@ -34,10 +35,9 @@ func (t *HttpTranslator) GenerateListeners(ctx context.Context, snap *v2.ApiSnap
 			continue
 		}
 
-		virtualServices := getVirtualServiceForGateway(gateway, snap.VirtualServices, resourceErrs)
-		filtered := filterVirtualServiceForGateway(gateway, virtualServices)
-		mergedVirtualServices := validateAndMergeVirtualServices(gateway, filtered, resourceErrs)
-		listener := desiredListenerForHttp(gateway, mergedVirtualServices, snap.RouteTables, resourceErrs)
+		virtualServices := getVirtualServicesForGateway(gateway, snap.VirtualServices)
+		mergedVirtualServices := validateAndMergeVirtualServices(gateway, virtualServices, reports)
+		listener := desiredListenerForHttp(gateway, mergedVirtualServices, snap.RouteTables, reports)
 		result = append(result, listener)
 	}
 	return result
@@ -51,7 +51,7 @@ func domainsToKey(domains []string) string {
 	return strings.Join(domains, ",")
 }
 
-func validateAndMergeVirtualServices(gateway *v2.Gateway, virtualServices v1.VirtualServiceList, resourceErrs reporter.ResourceErrors) v1.VirtualServiceList {
+func validateAndMergeVirtualServices(gateway *v2.Gateway, virtualServices v1.VirtualServiceList, reports reporter.ResourceReports) v1.VirtualServiceList {
 	ns := gateway.Metadata.GetNamespace()
 	domainKeysSets := map[string]v1.VirtualServiceList{}
 	for _, vs := range virtualServices {
@@ -75,7 +75,7 @@ func validateAndMergeVirtualServices(gateway *v2.Gateway, virtualServices v1.Vir
 	// report errors
 	for domain, domainSetKeys := range domainSet {
 		if len(domainSetKeys) > 1 {
-			resourceErrs.AddError(gateway, fmt.Errorf("domain %s is present in more than one vservice set in this gateway", domain))
+			reports.AddError(gateway, fmt.Errorf("domain %s is present in more than one vservice set in this gateway", domain))
 		}
 	}
 	// return merged list
@@ -96,7 +96,7 @@ func validateAndMergeVirtualServices(gateway *v2.Gateway, virtualServices v1.Vir
 			if sslConfig == nil {
 				sslConfig = vs.SslConfig
 			} else if !vs.SslConfig.Equal(sslConfig) {
-				resourceErrs.AddError(gateway, fmt.Errorf("more than one distinct ssl config is present in virtual service of these domains: %s", k))
+				reports.AddError(gateway, fmt.Errorf("more than one distinct ssl config is present in virtual service of these domains: %s", k))
 			}
 
 			havePlugins := vs.VirtualHost != nil &&
@@ -107,7 +107,7 @@ func validateAndMergeVirtualServices(gateway *v2.Gateway, virtualServices v1.Vir
 					vhostPlugins = vs.VirtualHost.VirtualHostPlugins
 				}
 			} else if havePlugins {
-				resourceErrs.AddError(gateway, fmt.Errorf("more than one vhost plugin is present in virtual service of these domains: %s", k))
+				reports.AddError(gateway, fmt.Errorf("more than one vhost plugin is present in virtual service of these domains: %s", k))
 			}
 		}
 
@@ -140,71 +140,64 @@ func getMergedName(k string) string {
 	return "merged-" + k
 }
 
-func getVirtualServiceForGateway(gateway *v2.Gateway, virtualServices v1.VirtualServiceList, resourceErrs reporter.ResourceErrors) v1.VirtualServiceList {
-	httpGateway := gateway.GetHttpGateway()
-	if httpGateway == nil {
-		return nil
-	}
+func getVirtualServicesForGateway(gateway *v2.Gateway, virtualServices v1.VirtualServiceList) v1.VirtualServiceList {
 
 	var virtualServicesForGateway v1.VirtualServiceList
-
-	switch {
-	case len(httpGateway.VirtualServiceSelector) > 0:
-		// select virtual services by the label selector
-		// must be in the same namespace as the Gateway
-		selector := labels.SelectorFromSet(httpGateway.VirtualServiceSelector)
-
-		virtualServices.Each(func(element *v1.VirtualService) {
-			vsLabels := labels.Set(element.Metadata.Labels)
-			if element.Metadata.Namespace == gateway.Metadata.Namespace && selector.Matches(vsLabels) {
-				virtualServicesForGateway = append(virtualServicesForGateway, element)
-			}
-		})
-
-	default:
-		// use individual refs to collect virtual services
-		virtualServiceRefs := httpGateway.VirtualServices
-
-		// fall back to all virtual services in all watchNamespaces
-		// TODO: make this all vs in a single namespace
-		// https://github.com/solo-io/gloo/issues/1142
-		if len(virtualServiceRefs) == 0 {
-			for _, virtualService := range virtualServices {
-				virtualServiceRefs = append(virtualServiceRefs, core.ResourceRef{
-					Name:      virtualService.GetMetadata().Name,
-					Namespace: virtualService.GetMetadata().Namespace,
-				})
-			}
-		}
-
-		for _, ref := range virtualServiceRefs {
-			virtualService, err := virtualServices.Find(ref.Strings())
-			if err != nil {
-				resourceErrs.AddError(gateway, err)
-				continue
-			}
-			virtualServicesForGateway = append(virtualServicesForGateway, virtualService)
+	for _, vs := range virtualServices {
+		if GatewayContainsVirtualService(gateway, vs) {
+			virtualServicesForGateway = append(virtualServicesForGateway, vs)
 		}
 	}
 
 	return virtualServicesForGateway
 }
 
-func filterVirtualServiceForGateway(gateway *v2.Gateway, virtualServices v1.VirtualServiceList) v1.VirtualServiceList {
-	var virtualServicesForGateway v1.VirtualServiceList
-	for _, virtualService := range virtualServices {
-		if gateway.Ssl == hasSsl(virtualService) {
-			virtualServicesForGateway = append(virtualServicesForGateway, virtualService)
+func GatewayContainsVirtualService(gateway *v2.Gateway, virtualService *v1.VirtualService) bool {
+	httpGateway := gateway.GetHttpGateway()
+	if httpGateway == nil {
+		return false
+	}
+
+	if gateway.Ssl != hasSsl(virtualService) {
+		return false
+	}
+
+	if len(httpGateway.VirtualServiceSelector) > 0 {
+		// select virtual services by the label selector
+		// must be in the same namespace as the Gateway
+		selector := labels.SelectorFromSet(httpGateway.VirtualServiceSelector)
+
+		vsLabels := labels.Set(virtualService.Metadata.Labels)
+
+		// must match both labels and namespace
+		return virtualService.Metadata.Namespace == gateway.Metadata.Namespace && selector.Matches(vsLabels)
+	}
+	// use individual refs to collect virtual services
+	virtualServiceRefs := httpGateway.VirtualServices
+
+	if len(virtualServiceRefs) == 0 {
+		// fall back to all virtual services in all watchNamespaces
+		// TODO: make this all vs in a single namespace
+		// https://github.com/solo-io/gloo/issues/1142
+		return true
+	}
+
+	vsRef := virtualService.Metadata.Ref()
+
+	for _, ref := range virtualServiceRefs {
+		if ref == vsRef {
+			return true
 		}
 	}
-	return virtualServicesForGateway
+
+	return false
 }
 
 func hasSsl(vs *v1.VirtualService) bool {
 	return vs.SslConfig != nil
 }
 
-func desiredListenerForHttp(gateway *v2.Gateway, virtualServicesForGateway v1.VirtualServiceList, tables v1.RouteTableList, resourceErrs reporter.ResourceErrors) *gloov1.Listener {
+func desiredListenerForHttp(gateway *v2.Gateway, virtualServicesForGateway v1.VirtualServiceList, tables v1.RouteTableList, reports reporter.ResourceReports) *gloov1.Listener {
 	var (
 		virtualHosts []*gloov1.VirtualHost
 		sslConfigs   []*gloov1.SslConfig
@@ -214,9 +207,9 @@ func desiredListenerForHttp(gateway *v2.Gateway, virtualServicesForGateway v1.Vi
 		if virtualService.VirtualHost == nil {
 			virtualService.VirtualHost = &v1.VirtualHost{}
 		}
-		vh, err := virtualServiceToVirtualHost(virtualService, tables, resourceErrs)
+		vh, err := virtualServiceToVirtualHost(virtualService, tables, reports)
 		if err != nil {
-			resourceErrs.AddError(virtualService, err)
+			reports.AddError(virtualService, err)
 			continue
 		}
 		virtualHosts = append(virtualHosts, vh)
@@ -240,8 +233,8 @@ func desiredListenerForHttp(gateway *v2.Gateway, virtualServicesForGateway v1.Vi
 	return listener
 }
 
-func virtualServiceToVirtualHost(vs *v1.VirtualService, tables v1.RouteTableList, resourceErrs reporter.ResourceErrors) (*gloov1.VirtualHost, error) {
-	routes, err := convertRoutes(vs, tables, resourceErrs)
+func virtualServiceToVirtualHost(vs *v1.VirtualService, tables v1.RouteTableList, reports reporter.ResourceReports) (*gloov1.VirtualHost, error) {
+	routes, err := convertRoutes(vs, tables, reports)
 	if err != nil {
 		return nil, err
 	}
@@ -258,11 +251,11 @@ func virtualServiceToVirtualHost(vs *v1.VirtualService, tables v1.RouteTableList
 	return vh, nil
 }
 
-func convertRoutes(vs *v1.VirtualService, tables v1.RouteTableList, resourceErrs reporter.ResourceErrors) ([]*gloov1.Route, error) {
+func convertRoutes(vs *v1.VirtualService, tables v1.RouteTableList, reports reporter.ResourceReports) ([]*gloov1.Route, error) {
 	var routes []*gloov1.Route
 	for _, r := range vs.GetVirtualHost().GetRoutes() {
 		rv := &routeVisitor{tables: tables}
-		mergedRoutes, err := rv.convertRoute(vs, r, resourceErrs)
+		mergedRoutes, err := rv.convertRoute(vs, r, reports)
 		if err != nil {
 			return nil, err
 		}
@@ -284,7 +277,7 @@ type routeVisitor struct {
 	visited v1.RouteTableList
 }
 
-func (rv *routeVisitor) convertRoute(ownerResource resources.InputResource, ours *v1.Route, resourceErrs reporter.ResourceErrors) ([]*gloov1.Route, error) {
+func (rv *routeVisitor) convertRoute(ownerResource resources.InputResource, ours *v1.Route, reports reporter.ResourceReports) ([]*gloov1.Route, error) {
 	route := &gloov1.Route{
 		Matcher:      ours.Matcher,
 		RoutePlugins: ours.RoutePlugins,
@@ -303,34 +296,39 @@ func (rv *routeVisitor) convertRoute(ownerResource resources.InputResource, ours
 			RouteAction: action.RouteAction,
 		}
 	case *v1.Route_DelegateAction:
-		return rv.convertDelegateAction(ownerResource, ours, resourceErrs)
+		return rv.convertDelegateAction(ownerResource, ours, reports)
 	}
 	return []*gloov1.Route{route}, nil
 }
 
 var (
-	missingPrefixErr    = errors.Errorf("invalid route: routes with delegate actions must specify a prefix matcher")
-	hasHeaderMatcherErr = errors.Errorf("invalid route: routes with delegate actions cannot use header matchers")
-	hasMethodMatcherErr = errors.Errorf("invalid route: routes with delegate actions cannot use method matchers")
-	hasQueryMatcherErr  = errors.Errorf("invalid route: routes with delegate actions cannot use query matchers")
-	delegationCycleErr  = errors.Errorf("invalid route: delegation cycle detected")
+	missingPrefixErr    = errors.New("invalid route: routes with delegate actions must specify a prefix matcher")
+	invalidPrefixErr    = errors.New("invalid route: routes within the route table must begin with the prefix of their parent")
+	invalidMatcherErr   = errors.New("invalid route: matcher cannot be missing")
+	hasHeaderMatcherErr = errors.New("invalid route: routes with delegate actions cannot use header matchers")
+	hasMethodMatcherErr = errors.New("invalid route: routes with delegate actions cannot use method matchers")
+	hasQueryMatcherErr  = errors.New("invalid route: routes with delegate actions cannot use query matchers")
+	delegationCycleErr  = errors.New("invalid route: delegation cycle detected")
 
-	noDelegateActionErr = errors.Errorf("internal error: convertDelegateAction() called on route without delegate action")
+	noDelegateActionErr = errors.New("internal error: convertDelegateAction() called on route without delegate action")
+
+	routeTableMissingWarning = func(ref core.ResourceRef) string {
+		return fmt.Sprintf("route table %v.%v missing", ref.Namespace, ref.Name)
+	}
 )
 
-func (rv *routeVisitor) convertDelegateAction(sourceResource resources.InputResource, ours *v1.Route, resourceErrs reporter.ResourceErrors) ([]*gloov1.Route, error) {
-	action := ours.GetDelegateAction()
-	if action == nil {
+func (rv *routeVisitor) convertDelegateAction(routingResource resources.InputResource, route *v1.Route, reports reporter.ResourceReports) ([]*gloov1.Route, error) {
+	delegate := route.GetDelegateAction()
+	if delegate == nil {
 		return nil, noDelegateActionErr
 	}
 
-	matcher := ours.GetMatcher()
+	matcher := route.GetMatcher()
 
 	prefix := matcher.GetPrefix()
 	if prefix == "" {
 		return nil, missingPrefixErr
 	}
-	prefix = "/" + strings.Trim(prefix, "/")
 
 	if len(matcher.GetHeaders()) > 0 {
 		return nil, hasHeaderMatcherErr
@@ -341,11 +339,15 @@ func (rv *routeVisitor) convertDelegateAction(sourceResource resources.InputReso
 	if len(matcher.GetQueryParameters()) > 0 {
 		return nil, hasQueryMatcherErr
 	}
-	routeTable, err := rv.tables.Find(action.Strings())
+
+	// missing refs should only result in a warning
+	// this allows resources to be applied asynchronously
+	routeTable, err := rv.tables.Find(delegate.Strings())
 	if err != nil {
-		resourceErrs.AddError(sourceResource, err)
-		return nil, err
+		reports.AddWarning(routingResource, routeTableMissingWarning(*delegate))
+		return nil, nil
 	}
+
 	for _, visited := range rv.visited {
 		if routeTable == visited {
 			return nil, delegationCycleErr
@@ -356,26 +358,39 @@ func (rv *routeVisitor) convertDelegateAction(sourceResource resources.InputReso
 	for _, vis := range rv.visited {
 		subRv.visited = append(subRv.visited, vis)
 	}
+
+	plugins := route.GetRoutePlugins()
+
 	var delegatedRoutes []*gloov1.Route
-	for _, route := range routeTable.Routes {
-		route := proto.Clone(route).(*v1.Route)
-		subRoutes, err := subRv.convertRoute(routeTable, route, resourceErrs)
+	for _, routeTableRoute := range routeTable.Routes {
+		// clone route since we mutate
+		routeTableRoute := proto.Clone(routeTableRoute).(*v1.Route)
+
+		merged, err := mergeRoutePlugins(routeTableRoute.GetRoutePlugins(), plugins)
+		if err != nil {
+			// should never happen
+			return nil, errors.Wrapf(err, "internal error: merging route plugins from parent to delegated route")
+		}
+		routeTableRoute.RoutePlugins = merged
+
+		match := routeTableRoute.GetMatcher()
+		if match == nil {
+			reports.AddError(routingResource, invalidMatcherErr)
+			continue
+		}
+
+		// ensure all subroutes in the delegated route table match the parent prefix
+		if pathString := glooutils.PathAsString(match); !strings.HasPrefix(pathString, prefix) {
+			err = errors.Wrapf(invalidPrefixErr, "required prefix: %v, path: %v", prefix, pathString)
+			reports.AddError(routingResource, err)
+			continue
+		}
+
+		subRoutes, err := subRv.convertRoute(routeTable, routeTableRoute, reports)
 		if err != nil {
 			return nil, errors.Wrapf(err, "converting sub-route")
 		}
 		for _, sub := range subRoutes {
-			switch path := sub.Matcher.PathSpecifier.(type) {
-			case *gloov1.Matcher_Exact:
-				path.Exact = prefix + path.Exact
-			case *gloov1.Matcher_Regex:
-				path.Regex = prefix + path.Regex
-			case *gloov1.Matcher_Prefix:
-				path.Prefix = prefix + path.Prefix
-			}
-			// inherit route plugins from parent
-			if sub.RoutePlugins == nil {
-				sub.RoutePlugins = proto.Clone(ours.RoutePlugins).(*gloov1.RoutePlugins)
-			}
 			if err := appendSource(sub, routeTable); err != nil {
 				// should never happen
 				return nil, err

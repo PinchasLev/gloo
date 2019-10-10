@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/solo-io/go-utils/errors"
+
 	"github.com/solo-io/gloo/install/helm/gloo/generate"
 
 	"github.com/solo-io/gloo/pkg/cliutil"
@@ -11,7 +13,6 @@ import (
 	"github.com/solo-io/gloo/pkg/version"
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/cmd/options"
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/constants"
-	"github.com/solo-io/go-utils/errors"
 )
 
 var (
@@ -39,13 +40,20 @@ func init() {
 		"Service",
 		"ServiceAccount",
 		"ConfigMap",
+		"Job",
 	}
 
 	GlooRbacKinds = []string{
 		"ClusterRole",
 		"ClusterRoleBinding",
 	}
-	GlooPreInstallKinds = append(GlooPreInstallKinds, "ServiceAccount")
+	GlooPreInstallKinds = append(GlooPreInstallKinds,
+		"ServiceAccount",
+		"Gateway",
+		"Job",
+		"Settings",
+		"ValidatingWebhookConfiguration",
+	)
 	GlooPreInstallKinds = append(GlooPreInstallKinds, GlooRbacKinds...)
 	GlooInstallKinds = GlooSystemKinds
 
@@ -59,6 +67,7 @@ func init() {
 		"upstreamgroups.gloo.solo.io",
 		"virtualservices.gateway.solo.io",
 		"routetables.gateway.solo.io",
+		"authconfigs.enterprise.gloo.solo.io",
 	}
 
 	KnativeCrdNames = []string{
@@ -91,9 +100,7 @@ type GlooInstallSpec struct {
 
 // Entry point for all three GLoo installation commands
 func installGloo(opts *options.Options, valueFileName string) error {
-	if !opts.Install.DryRun {
-		fmt.Printf("Starting Gloo installation...\n")
-	}
+	preInstallMessage(opts)
 	spec, err := GetInstallSpec(opts, valueFileName)
 	if err != nil {
 		return err
@@ -103,10 +110,21 @@ func installGloo(opts *options.Options, valueFileName string) error {
 		fmt.Fprintf(os.Stderr, "\nGloo failed to install! Detailed logs available at %s.\n", cliutil.GetLogsPath())
 		return err
 	}
-	if !opts.Install.DryRun {
-		fmt.Printf("\nGloo was successfully installed!\n")
-	}
+	postInstallMessage(opts)
 	return nil
+}
+
+func preInstallMessage(opts *options.Options) {
+	if opts.Install.DryRun {
+		return
+	}
+	fmt.Printf("Starting Gloo installation...\n")
+}
+func postInstallMessage(opts *options.Options) {
+	if opts.Install.DryRun {
+		return
+	}
+	fmt.Printf("\nGloo was successfully installed!\n")
 }
 
 func GetInstallSpec(opts *options.Options, valueFileName string) (*GlooInstallSpec, error) {
@@ -118,6 +136,9 @@ func GetInstallSpec(opts *options.Options, valueFileName string) (*GlooInstallSp
 
 	// Get location of Gloo helm chart
 	helmChartArchiveUri := fmt.Sprintf(constants.GlooHelmRepoTemplate, glooVersion)
+	if opts.Install.WithUi {
+		helmChartArchiveUri = fmt.Sprintf(constants.GlooWithUiHelmRepoTemplate, glooVersion)
+	}
 	if helmChartOverride := opts.Install.HelmChartOverride; helmChartOverride != "" {
 		helmChartArchiveUri = helmChartOverride
 	}
@@ -125,6 +146,16 @@ func GetInstallSpec(opts *options.Options, valueFileName string) (*GlooInstallSp
 	var extraValues map[string]interface{}
 	if opts.Install.Upgrade {
 		extraValues = map[string]interface{}{"gateway": map[string]interface{}{"upgrade": true}}
+	} else if opts.Install.WithUi {
+		// need to make sure the ns is created when installing UI via passing this extra
+		// value through
+		extraValues = map[string]interface{}{
+			"gloo": map[string]interface{}{
+				"namespace": map[string]interface{}{
+					"create": "true",
+				},
+			},
+		}
 	}
 	var valueCallbacks []install.ValuesCallback
 	if opts.Install.Knative.InstallKnativeVersion != "" {
@@ -153,6 +184,9 @@ func GetInstallSpec(opts *options.Options, valueFileName string) (*GlooInstallSp
 }
 
 func getGlooVersion(opts *options.Options) (string, error) {
+	if opts.Install.WithUi {
+		return version.EnterpriseTag, nil
+	}
 	if !version.IsReleaseVersion() && opts.Install.HelmChartOverride == "" {
 		return "", errors.Errorf("you must provide a Gloo Helm chart URI via the 'file' option " +
 			"when running an unreleased version of glooctl")

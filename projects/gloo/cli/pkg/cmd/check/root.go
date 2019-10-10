@@ -16,6 +16,7 @@ import (
 	"github.com/solo-io/solo-kit/pkg/api/v1/clients"
 	"github.com/solo-io/solo-kit/pkg/api/v1/resources/core"
 	"github.com/spf13/cobra"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -25,7 +26,7 @@ func RootCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.
 		Use:   constants.CHECK_COMMAND.Use,
 		Short: constants.CHECK_COMMAND.Short,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ok, err := checkResources(opts)
+			ok, err := CheckResources(opts)
 			if err != nil {
 				// Not returning error here because this shouldn't propagate as a standard CLI error, which prints usage.
 				fmt.Printf("Error!\n")
@@ -46,12 +47,16 @@ func RootCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.
 	return cmd
 }
 
-func checkResources(opts *options.Options) (bool, error) {
+func CheckResources(opts *options.Options) (bool, error) {
 	err := checkConnection()
 	if err != nil {
 		return false, err
 	}
-	ok, err := checkPods(opts)
+	ok, err := checkDeployments(opts)
+	if !ok || err != nil {
+		return ok, err
+	}
+	ok, err = checkPods(opts)
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -98,26 +103,129 @@ func checkResources(opts *options.Options) (bool, error) {
 	return true, nil
 }
 
-func checkPods(opts *options.Options) (bool, error) {
-	fmt.Printf("Checking pods... ")
+func checkDeployments(opts *options.Options) (bool, error) {
+	fmt.Printf("Checking deployments... ")
 	client := helpers.MustKubeClient()
 	_, err := client.CoreV1().Namespaces().Get(opts.Metadata.Namespace, metav1.GetOptions{})
 	if err != nil {
 		fmt.Printf("Gloo namespace does not exist\n")
 		return false, err
 	}
+	deployments, err := client.AppsV1().Deployments(opts.Metadata.Namespace).List(metav1.ListOptions{})
+	if err != nil {
+		return false, err
+	}
+	if len(deployments.Items) == 0 {
+		fmt.Printf("Gloo is not installed\n")
+		return false, nil
+	}
+
+	var errorToPrint string
+	var message string
+	setMessage := func(c appsv1.DeploymentCondition) {
+		if c.Message != "" {
+			message = fmt.Sprintf(" Message: %s", c.Message)
+		}
+	}
+
+	for _, deployment := range deployments.Items {
+		// possible condition types listed at https://godoc.org/k8s.io/api/apps/v1#DeploymentConditionType
+		// check for each condition independently because multiple conditions will be True and DeploymentReplicaFailure
+		// tends to provide the most explicit error message.
+		for _, condition := range deployment.Status.Conditions {
+			setMessage(condition)
+			if condition.Type == appsv1.DeploymentReplicaFailure && condition.Status == corev1.ConditionTrue {
+				errorToPrint = fmt.Sprintf("Deployment %s in namespace %s failed to create pods!%s\n", deployment.Name, deployment.Namespace, message)
+			}
+			if errorToPrint != "" {
+				fmt.Print(errorToPrint)
+				return false, err
+			}
+		}
+
+		for _, condition := range deployment.Status.Conditions {
+			setMessage(condition)
+			if condition.Type == appsv1.DeploymentProgressing && condition.Status != corev1.ConditionTrue {
+				errorToPrint = fmt.Sprintf("Deployment %s in namespace %s is not progressing!%s\n", deployment.Name, deployment.Namespace, message)
+			}
+
+			if errorToPrint != "" {
+				fmt.Print(errorToPrint)
+				return false, err
+			}
+		}
+
+		for _, condition := range deployment.Status.Conditions {
+			setMessage(condition)
+			if condition.Type == appsv1.DeploymentAvailable && condition.Status != corev1.ConditionTrue {
+				errorToPrint = fmt.Sprintf("Deployment %s in namespace %s is not available!%s\n", deployment.Name, deployment.Namespace, message)
+			}
+
+			if errorToPrint != "" {
+				fmt.Print(errorToPrint)
+				return false, err
+			}
+		}
+
+		for _, condition := range deployment.Status.Conditions {
+			if condition.Type != appsv1.DeploymentAvailable &&
+				condition.Type != appsv1.DeploymentReplicaFailure &&
+				condition.Type != appsv1.DeploymentProgressing {
+				fmt.Printf("Note: Unhandled deployment condition %s", condition.Type)
+			}
+		}
+	}
+	fmt.Printf("OK\n")
+	return true, nil
+}
+
+func checkPods(opts *options.Options) (bool, error) {
+	fmt.Printf("Checking pods... ")
+	client := helpers.MustKubeClient()
 	pods, err := client.CoreV1().Pods(opts.Metadata.Namespace).List(metav1.ListOptions{})
 	if err != nil {
 		return false, err
 	}
-	if len(pods.Items) == 0 {
-		fmt.Printf("Gloo is not installed\n")
-		return false, nil
-	}
 	for _, pod := range pods.Items {
 		for _, condition := range pod.Status.Conditions {
-			if condition.Type == corev1.PodReady && condition.Status != corev1.ConditionTrue {
-				fmt.Printf("Pod %s in namespace %s is not ready!\n", pod.Name, pod.Namespace)
+			var errorToPrint string
+			var message string
+
+			if condition.Message != "" {
+				message = fmt.Sprintf(" Message: %s", condition.Message)
+			}
+
+			// if condition is not met and the pod is not completed
+			conditionNotMet := condition.Status != corev1.ConditionTrue && condition.Reason != "PodCompleted"
+
+			// possible condition types listed at https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-conditions
+			switch condition.Type {
+			case corev1.PodScheduled:
+				if conditionNotMet {
+					errorToPrint = fmt.Sprintf("Pod %s in namespace %s is not yet scheduled!%s\n", pod.Name, pod.Namespace, message)
+				}
+			case corev1.PodReady:
+				if conditionNotMet {
+					errorToPrint = fmt.Sprintf("Pod %s in namespace %s is not ready!%s\n", pod.Name, pod.Namespace, message)
+				}
+			case corev1.PodInitialized:
+				if conditionNotMet {
+					errorToPrint = fmt.Sprintf("Pod %s in namespace %s is not yet initialized!%s\n", pod.Name, pod.Namespace, message)
+				}
+			case corev1.PodReasonUnschedulable:
+				if conditionNotMet {
+					errorToPrint = fmt.Sprintf("Pod %s in namespace %s is unschedulable!%s\n", pod.Name, pod.Namespace, message)
+				}
+			case corev1.ContainersReady:
+				if conditionNotMet {
+					errorToPrint = fmt.Sprintf("Not all containers in pod %s in namespace %s are ready!%s\n", pod.Name, pod.Namespace, message)
+				}
+			default:
+				fmt.Printf("Note: Unhandled pod condition %s", condition.Type)
+			}
+
+			if errorToPrint != "" {
+				fmt.Print(errorToPrint)
 				return false, err
 			}
 		}

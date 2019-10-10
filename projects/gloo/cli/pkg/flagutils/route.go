@@ -7,8 +7,9 @@ import (
 )
 
 func AddRouteFlags(set *pflag.FlagSet, route *options.InputRoute) {
-	set.Uint32VarP(&route.InsertIndex, "index", "x", 0, "index in the virtual service "+
+	set.Uint32VarP(&route.InsertIndex, "index", "x", 0, "index in the virtual service's or route table's"+
 		"route list where to insert this route. routes after it will be shifted back one")
+	set.BoolVar(&route.AddToRouteTable, "to-route-table", false, "insert the route into a route table rather than a virtual service")
 
 	set.StringVarP(&route.Matcher.PathExact, "path-exact", "e", "", "exact path to match route")
 	set.StringVarP(&route.Matcher.PathRegex, "path-regex", "r", "", "regex matcher for route. "+
@@ -18,11 +19,18 @@ func AddRouteFlags(set *pflag.FlagSet, route *options.InputRoute) {
 		"the HTTP methods (GET, POST, etc.) to match on the request. if empty, all methods will match ")
 	set.StringSliceVarP(&route.Matcher.HeaderMatcher.Entries, "header", "d", []string{},
 		"headers to match on the request. values can be specified using regex strings")
+	set.StringSliceVarP(&route.Matcher.QueryParameterMatcher.Entries, "queryParameter", "q", []string{},
+		"query parameters to match on the request. values can be specified using regex strings")
 
 	set.StringVarP(&route.Destination.Upstream.Name, "dest-name", "u", "",
 		"name of the destination upstream for this route")
 	set.StringVarP(&route.Destination.Upstream.Namespace, "dest-namespace", "s", defaults.GlooSystem,
 		"namespace of the destination upstream for this route")
+
+	set.StringVar(&route.Destination.Delegate.Name, "delegate-name", "",
+		"name of the delegated RouteTable for this route")
+	set.StringVar(&route.Destination.Delegate.Namespace, "delegate-namespace", defaults.GlooSystem,
+		"namespace of the delegated RouteTable for this route")
 
 	set.StringVarP(&route.UpstreamGroup.Name, "upstream-group-name", "", "",
 		"name of the upstream group destination for this route")

@@ -7,7 +7,7 @@ k8s:
 
 settings:
   # if this is set to false, default settings will be created by pods upon boot
-  create: false
+  create: true
   integrations:
     knative:
       enabled: false
@@ -19,8 +19,10 @@ gloo:
     image:
       repository: gloo
     xdsPort: 9977
+    validationPort: 9988
     replicas: 1
     stats: true
+    runAsUser: 10101
 
 discovery:
   enabled: true
@@ -29,22 +31,34 @@ discovery:
       repository: discovery
     replicas: 1
     stats: true
+    runAsUser: 10101
 
 gateway:
   enabled: true
+  validation:
+    failurePolicy: "Ignore"
+    secretName: gateway-validation-certs
+    alwaysAcceptResources: true
   upgrade: false
   deployment:
     image:
       repository: gateway
     replicas: 1
     stats: true
+    runAsUser: 10101
   conversionJob:
     image:
       repository: gateway-conversion
     restartPolicy: Never
+  certGenJob:
+    image:
+      repository: certgen
+    restartPolicy: OnFailure
   proxyServiceAccount: {}
+
 gatewayProxies:
   gatewayProxyV2:
+    gatewaySettings: {}
     stats: true
     kind:
        deployment:
@@ -55,6 +69,7 @@ gatewayProxies:
         repository: gloo-envoy-wrapper
       httpPort: 8080
       httpsPort: 8443
+      runAsUser: 10101
     service:
       type: LoadBalancer
       # clusterIP: None

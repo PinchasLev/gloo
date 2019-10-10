@@ -31,13 +31,15 @@ glooctl install knative [flags]
   -g, --skip-installing-gloo            Skip installing Gloo. Only Knative components will be installed
   -u, --upgrade                         Upgrade an existing v1 gateway installation to use v2 CRDs. Set this when upgrading from v0.17.x or earlier versions of gloo
       --values string                   Values for the Gloo Helm chart
+      --with-admin-console              install gloo and a read-only version of its admin console
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -i, --interactive   use interactive mode
-  -v, --verbose       If true, output from kubectl commands will print to stdout/stderr
+  -i, --interactive         use interactive mode
+      --kubeconfig string   kubeconfig to use, if not standard one
+  -v, --verbose             If true, output from kubectl commands will print to stdout/stderr
 ```
 
 ### SEE ALSO

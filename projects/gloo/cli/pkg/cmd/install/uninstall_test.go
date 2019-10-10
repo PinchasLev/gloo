@@ -37,7 +37,7 @@ func (k *MockKubectl) Kubectl(stdin io.Reader, args ...string) error {
 var _ = Describe("Uninstall", func() {
 
 	const (
-		deleteCrds = "delete crd gateways.gateway.solo.io.v2 proxies.gloo.solo.io settings.gloo.solo.io upstreams.gloo.solo.io upstreamgroups.gloo.solo.io virtualservices.gateway.solo.io routetables.gateway.solo.io"
+		deleteCrds = `delete crd gateways.gateway.solo.io.v2 proxies.gloo.solo.io settings.gloo.solo.io upstreams.gloo.solo.io upstreamgroups.gloo.solo.io virtualservices.gateway.solo.io routetables.gateway.solo.io authconfigs.enterprise.gloo.solo.io`
 	)
 
 	var flagSet *pflag.FlagSet
@@ -59,9 +59,21 @@ var _ = Describe("Uninstall", func() {
 		flagSet.Parse([]string{})
 		cli := NewMockKubectl(
 			"delete Deployment -l app=gloo -n gloo-system",
+			"delete Deployment -l app=glooe-grafana -n gloo-system",
+			"delete Deployment -l app=glooe-prometheus -n gloo-system",
 			"delete Service -l app=gloo -n gloo-system",
+			"delete Service -l app=glooe-grafana -n gloo-system",
+			"delete Service -l app=glooe-prometheus -n gloo-system",
 			"delete ServiceAccount -l app=gloo -n gloo-system",
-			"delete ConfigMap -l app=gloo -n gloo-system")
+			"delete ServiceAccount -l app=glooe-grafana -n gloo-system",
+			"delete ServiceAccount -l app=glooe-prometheus -n gloo-system",
+			"delete ConfigMap -l app=gloo -n gloo-system",
+			"delete ConfigMap -l app=glooe-grafana -n gloo-system",
+			"delete ConfigMap -l app=glooe-prometheus -n gloo-system",
+			"delete Job -l app=gloo -n gloo-system",
+			"delete Job -l app=glooe-grafana -n gloo-system",
+			"delete Job -l app=glooe-prometheus -n gloo-system",
+		)
 		uninstall(cli)
 	})
 
@@ -69,9 +81,21 @@ var _ = Describe("Uninstall", func() {
 		flagSet.Parse([]string{"-n", "foo"})
 		cli := NewMockKubectl(
 			"delete Deployment -l app=gloo -n foo",
+			"delete Deployment -l app=glooe-grafana -n foo",
+			"delete Deployment -l app=glooe-prometheus -n foo",
 			"delete Service -l app=gloo -n foo",
+			"delete Service -l app=glooe-grafana -n foo",
+			"delete Service -l app=glooe-prometheus -n foo",
 			"delete ServiceAccount -l app=gloo -n foo",
-			"delete ConfigMap -l app=gloo -n foo")
+			"delete ServiceAccount -l app=glooe-grafana -n foo",
+			"delete ServiceAccount -l app=glooe-prometheus -n foo",
+			"delete ConfigMap -l app=gloo -n foo",
+			"delete ConfigMap -l app=glooe-grafana -n foo",
+			"delete ConfigMap -l app=glooe-prometheus -n foo",
+			"delete Job -l app=gloo -n foo",
+			"delete Job -l app=glooe-grafana -n foo",
+			"delete Job -l app=glooe-prometheus -n foo",
+		)
 		uninstall(cli)
 	})
 
@@ -79,9 +103,20 @@ var _ = Describe("Uninstall", func() {
 		flagSet.Parse([]string{"--delete-crds"})
 		cli := NewMockKubectl(
 			"delete Deployment -l app=gloo -n gloo-system",
+			"delete Deployment -l app=glooe-grafana -n gloo-system",
+			"delete Deployment -l app=glooe-prometheus -n gloo-system",
 			"delete Service -l app=gloo -n gloo-system",
+			"delete Service -l app=glooe-grafana -n gloo-system",
+			"delete Service -l app=glooe-prometheus -n gloo-system",
 			"delete ServiceAccount -l app=gloo -n gloo-system",
+			"delete ServiceAccount -l app=glooe-grafana -n gloo-system",
+			"delete ServiceAccount -l app=glooe-prometheus -n gloo-system",
 			"delete ConfigMap -l app=gloo -n gloo-system",
+			"delete ConfigMap -l app=glooe-grafana -n gloo-system",
+			"delete ConfigMap -l app=glooe-prometheus -n gloo-system",
+			"delete Job -l app=gloo -n gloo-system",
+			"delete Job -l app=glooe-grafana -n gloo-system",
+			"delete Job -l app=glooe-prometheus -n gloo-system",
 			deleteCrds)
 		uninstall(cli)
 	})
@@ -90,9 +125,20 @@ var _ = Describe("Uninstall", func() {
 		flagSet.Parse([]string{"-n", "foo", "--delete-crds"})
 		cli := NewMockKubectl(
 			"delete Deployment -l app=gloo -n foo",
+			"delete Deployment -l app=glooe-grafana -n foo",
+			"delete Deployment -l app=glooe-prometheus -n foo",
 			"delete Service -l app=gloo -n foo",
+			"delete Service -l app=glooe-grafana -n foo",
+			"delete Service -l app=glooe-prometheus -n foo",
 			"delete ServiceAccount -l app=gloo -n foo",
+			"delete ServiceAccount -l app=glooe-grafana -n foo",
+			"delete ServiceAccount -l app=glooe-prometheus -n foo",
 			"delete ConfigMap -l app=gloo -n foo",
+			"delete ConfigMap -l app=glooe-grafana -n foo",
+			"delete ConfigMap -l app=glooe-prometheus -n foo",
+			"delete Job -l app=gloo -n foo",
+			"delete Job -l app=glooe-grafana -n foo",
+			"delete Job -l app=glooe-prometheus -n foo",
 			deleteCrds)
 		uninstall(cli)
 	})

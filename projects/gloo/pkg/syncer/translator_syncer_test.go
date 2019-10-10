@@ -2,6 +2,7 @@ package syncer_test
 
 import (
 	"github.com/solo-io/gloo/projects/gateway/pkg/translator"
+	"github.com/solo-io/gloo/projects/gloo/pkg/api/grpc/validation"
 	"github.com/solo-io/gloo/projects/gloo/pkg/plugins"
 	"github.com/solo-io/gloo/projects/gloo/pkg/xds"
 
@@ -15,8 +16,8 @@ import (
 	"github.com/solo-io/solo-kit/pkg/api/v1/clients/factory"
 	"github.com/solo-io/solo-kit/pkg/api/v1/clients/memory"
 	envoycache "github.com/solo-io/solo-kit/pkg/api/v1/control-plane/cache"
-	"github.com/solo-io/solo-kit/pkg/api/v1/reporter"
 	"github.com/solo-io/solo-kit/pkg/api/v1/resources/core"
+	"github.com/solo-io/solo-kit/pkg/api/v2/reporter"
 	"github.com/solo-io/solo-kit/pkg/errors"
 )
 
@@ -59,7 +60,7 @@ var _ = Describe("Translate Proxy", func() {
 		Expect(proxies[0]).To(BeAssignableToTypeOf(&v1.Proxy{}))
 		Expect(proxies[0].(*v1.Proxy).Status).To(Equal(core.Status{
 			State:      2,
-			Reason:     "hi, how ya doin'?",
+			Reason:     "1 error occurred:\n\t* hi, how ya doin'?\n\n",
 			ReportedBy: ref,
 		}))
 
@@ -92,11 +93,13 @@ type mockTranslator struct {
 	reportErrs bool
 }
 
-func (t *mockTranslator) Translate(params plugins.Params, proxy *v1.Proxy) (envoycache.Snapshot, reporter.ResourceErrors, error) {
+func (t *mockTranslator) Translate(params plugins.Params, proxy *v1.Proxy) (envoycache.Snapshot, reporter.ResourceReports, *validation.ProxyReport, error) {
 	if t.reportErrs {
-		return envoycache.NilSnapshot{}, reporter.ResourceErrors{proxy: errors.Errorf("hi, how ya doin'?")}, nil
+		rpts := reporter.ResourceReports{}
+		rpts.AddError(proxy, errors.Errorf("hi, how ya doin'?"))
+		return envoycache.NilSnapshot{}, rpts, &validation.ProxyReport{}, nil
 	}
-	return envoycache.NilSnapshot{}, nil, nil
+	return envoycache.NilSnapshot{}, nil, &validation.ProxyReport{}, nil
 }
 
 var _ envoycache.SnapshotCache = &mockXdsCache{}

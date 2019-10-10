@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/solo-io/gloo/test/samples"
+
 	"github.com/solo-io/gloo/projects/gloo/pkg/api/v1/plugins/transformation"
 
 	"github.com/gogo/protobuf/types"
@@ -88,8 +90,8 @@ var _ = Describe("Translator", func() {
 		It("should translate proxy with default name", func() {
 			proxy, errs := translator.Translate(context.Background(), GatewayProxyName, ns, snap, snap.Gateways)
 
-			Expect(errs).To(HaveLen(3))
-			Expect(errs.Validate()).NotTo(HaveOccurred())
+			Expect(errs).To(HaveLen(4))
+			Expect(errs.ValidateStrict()).NotTo(HaveOccurred())
 			Expect(proxy.Metadata.Name).To(Equal(GatewayProxyName))
 			Expect(proxy.Metadata.Namespace).To(Equal(ns))
 		})
@@ -113,8 +115,8 @@ var _ = Describe("Translator", func() {
 
 			proxy, errs := translator.Translate(context.Background(), GatewayProxyName, ns, snap, snap.Gateways)
 
-			Expect(errs).To(HaveLen(3))
-			Expect(errs.Validate()).NotTo(HaveOccurred())
+			Expect(errs).To(HaveLen(4))
+			Expect(errs.ValidateStrict()).NotTo(HaveOccurred())
 			Expect(proxy.Metadata.Name).To(Equal(GatewayProxyName))
 			Expect(proxy.Metadata.Namespace).To(Equal(ns))
 			Expect(proxy.Listeners).To(HaveLen(1))
@@ -139,7 +141,7 @@ var _ = Describe("Translator", func() {
 
 			proxy, errs := translator.Translate(context.Background(), GatewayProxyName, ns, snap, snap.Gateways)
 
-			Expect(errs.Validate()).NotTo(HaveOccurred())
+			Expect(errs.ValidateStrict()).NotTo(HaveOccurred())
 			Expect(proxy.Metadata.Name).To(Equal(GatewayProxyName))
 			Expect(proxy.Metadata.Namespace).To(Equal(ns))
 			Expect(proxy.Listeners).To(HaveLen(2))
@@ -158,7 +160,7 @@ var _ = Describe("Translator", func() {
 
 			proxy, errs := translator.Translate(context.Background(), GatewayProxyName, ns, snap, snap.Gateways)
 
-			Expect(errs.Validate()).NotTo(HaveOccurred())
+			Expect(errs.ValidateStrict()).NotTo(HaveOccurred())
 			Expect(proxy.Metadata.Name).To(Equal(GatewayProxyName))
 			Expect(proxy.Metadata.Namespace).To(Equal(ns))
 			Expect(proxy.Listeners).To(HaveLen(2))
@@ -172,9 +174,31 @@ var _ = Describe("Translator", func() {
 			snap.Gateways = append(snap.Gateways, &dupeGateway)
 
 			_, errs := translator.Translate(context.Background(), GatewayProxyName, ns, snap, snap.Gateways)
-			err := errs.Validate()
+			err := errs.ValidateStrict()
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("bind-address :2 is not unique in a proxy. gateways: gloo-system.name,gloo-system.name2"))
+		})
+
+		It("should warn on vs with missing delegate action", func() {
+
+			badRoute := &v1.Route{
+				Matcher: &gloov1.Matcher{PathSpecifier: &gloov1.Matcher_Prefix{Prefix: "/"}},
+				Action: &v1.Route_DelegateAction{
+					DelegateAction: &core.ResourceRef{"don't", "exist"},
+				},
+			}
+
+			us := samples.SimpleUpstream()
+			snap := samples.GatewaySnapshotWithDelegates(us.Metadata.Ref(), ns)
+			rt := snap.RouteTables[0]
+			rt.Routes = append(rt.Routes, badRoute)
+
+			_, reports := translator.Translate(context.Background(), GatewayProxyName, ns, snap, snap.Gateways)
+			err := reports.Validate()
+			Expect(err).NotTo(HaveOccurred())
+			err = reports.ValidateStrict()
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("route table exist.don't missing"))
 		})
 
 	})
@@ -267,7 +291,7 @@ var _ = Describe("Translator", func() {
 
 					proxy, errs := translator.Translate(context.Background(), GatewayProxyName, ns, snap, snap.Gateways)
 
-					Expect(errs.Validate()).NotTo(HaveOccurred())
+					Expect(errs.ValidateStrict()).NotTo(HaveOccurred())
 					Expect(proxy).NotTo(BeNil())
 					Expect(proxy.Listeners).To(HaveLen(1))
 					listener := proxy.Listeners[0].ListenerType.(*gloov1.Listener_HttpListener).HttpListener
@@ -285,7 +309,7 @@ var _ = Describe("Translator", func() {
 
 					proxy, errs := translator.Translate(context.Background(), GatewayProxyName, ns, snap, snap.Gateways)
 
-					Expect(errs.Validate()).NotTo(HaveOccurred())
+					Expect(errs.ValidateStrict()).NotTo(HaveOccurred())
 					Expect(proxy).NotTo(BeNil())
 					Expect(proxy.Listeners).To(HaveLen(1))
 					listener := proxy.Listeners[0].ListenerType.(*gloov1.Listener_HttpListener).HttpListener
@@ -298,7 +322,7 @@ var _ = Describe("Translator", func() {
 
 				proxy, errs := translator.Translate(context.Background(), GatewayProxyName, ns, snap, snap.Gateways)
 
-				Expect(errs.Validate()).NotTo(HaveOccurred())
+				Expect(errs.ValidateStrict()).NotTo(HaveOccurred())
 
 				Expect(proxy.Listeners).To(HaveLen(1))
 				listener := proxy.Listeners[0].ListenerType.(*gloov1.Listener_HttpListener).HttpListener
@@ -312,7 +336,7 @@ var _ = Describe("Translator", func() {
 
 				proxy, errs := translator.Translate(context.Background(), GatewayProxyName, ns, snap, snap.Gateways)
 
-				Expect(errs.Validate()).NotTo(HaveOccurred())
+				Expect(errs.ValidateStrict()).NotTo(HaveOccurred())
 
 				Expect(proxy.Listeners).To(HaveLen(1))
 				listener := proxy.Listeners[0].ListenerType.(*gloov1.Listener_HttpListener).HttpListener
@@ -329,7 +353,7 @@ var _ = Describe("Translator", func() {
 
 					proxy, errs := translator.Translate(context.Background(), GatewayProxyName, ns, snap, snap.Gateways)
 
-					Expect(errs.Validate()).NotTo(HaveOccurred())
+					Expect(errs.ValidateStrict()).NotTo(HaveOccurred())
 					Expect(proxy.Metadata.Name).To(Equal(GatewayProxyName))
 					Expect(proxy.Metadata.Namespace).To(Equal(ns))
 					Expect(proxy.Listeners).To(HaveLen(1))
@@ -343,7 +367,7 @@ var _ = Describe("Translator", func() {
 
 					proxy, errs := translator.Translate(context.Background(), GatewayProxyName, ns, snap, snap.Gateways)
 
-					Expect(errs.Validate()).NotTo(HaveOccurred())
+					Expect(errs.ValidateStrict()).NotTo(HaveOccurred())
 					Expect(proxy.Listeners).To(HaveLen(1))
 					listener := proxy.Listeners[0].ListenerType.(*gloov1.Listener_HttpListener).HttpListener
 					Expect(listener.VirtualHosts).To(HaveLen(1))
@@ -356,7 +380,7 @@ var _ = Describe("Translator", func() {
 
 					_, errs := translator.Translate(context.Background(), GatewayProxyName, ns, snap, snap.Gateways)
 
-					Expect(errs.Validate()).NotTo(HaveOccurred())
+					Expect(errs.ValidateStrict()).NotTo(HaveOccurred())
 				})
 
 				It("should error with both having plugins", func() {
@@ -365,7 +389,7 @@ var _ = Describe("Translator", func() {
 
 					_, errs := translator.Translate(context.Background(), GatewayProxyName, ns, snap, snap.Gateways)
 
-					Expect(errs.Validate()).To(HaveOccurred())
+					Expect(errs.ValidateStrict()).To(HaveOccurred())
 				})
 
 				It("should not error with one contains ssl config", func() {
@@ -373,7 +397,7 @@ var _ = Describe("Translator", func() {
 
 					proxy, errs := translator.Translate(context.Background(), GatewayProxyName, ns, snap, snap.Gateways)
 
-					Expect(errs.Validate()).NotTo(HaveOccurred())
+					Expect(errs.ValidateStrict()).NotTo(HaveOccurred())
 					listener := proxy.Listeners[0].ListenerType.(*gloov1.Listener_HttpListener).HttpListener
 					Expect(listener.VirtualHosts).To(HaveLen(1))
 				})
@@ -384,7 +408,7 @@ var _ = Describe("Translator", func() {
 
 					proxy, errs := translator.Translate(context.Background(), GatewayProxyName, ns, snap, snap.Gateways)
 
-					Expect(errs.Validate()).NotTo(HaveOccurred())
+					Expect(errs.ValidateStrict()).NotTo(HaveOccurred())
 					listener := proxy.Listeners[0].ListenerType.(*gloov1.Listener_HttpListener).HttpListener
 					Expect(listener.VirtualHosts).To(HaveLen(1))
 					Expect(listener.VirtualHosts[0].Routes).To(HaveLen(1))
@@ -399,7 +423,7 @@ var _ = Describe("Translator", func() {
 
 					_, errs := translator.Translate(context.Background(), GatewayProxyName, ns, snap, snap.Gateways)
 
-					Expect(errs.Validate()).To(HaveOccurred())
+					Expect(errs.ValidateStrict()).To(HaveOccurred())
 				})
 
 				It("should error when two virtual services conflict", func() {
@@ -411,7 +435,7 @@ var _ = Describe("Translator", func() {
 
 					_, errs := translator.Translate(context.Background(), GatewayProxyName, ns, snap, snap.Gateways)
 
-					Expect(errs.Validate()).To(HaveOccurred())
+					Expect(errs.ValidateStrict()).To(HaveOccurred())
 				})
 
 				It("should error when two virtual services conflict", func() {
@@ -423,16 +447,21 @@ var _ = Describe("Translator", func() {
 
 					_, errs := translator.Translate(context.Background(), GatewayProxyName, ns, snap, snap.Gateways)
 
-					Expect(errs.Validate()).NotTo(HaveOccurred())
+					Expect(errs.ValidateStrict()).NotTo(HaveOccurred())
 				})
 			})
 		})
 
 		Context("using RouteTables and delegation", func() {
 			Context("valid configuration", func() {
+				dur := time.Minute
+
 				rootLevelRoutePlugins := &gloov1.RoutePlugins{PrefixRewrite: &transformation.PrefixRewrite{PrefixRewrite: "root route plugin"}}
-				midLevelRoutePlugins := &gloov1.RoutePlugins{PrefixRewrite: &transformation.PrefixRewrite{PrefixRewrite: "mid level plugin"}}
+				midLevelRoutePlugins := &gloov1.RoutePlugins{Timeout: &dur}
 				leafLevelRoutePlugins := &gloov1.RoutePlugins{PrefixRewrite: &transformation.PrefixRewrite{PrefixRewrite: "leaf level plugin"}}
+
+				mergedMidLevelRoutePlugins := &gloov1.RoutePlugins{PrefixRewrite: rootLevelRoutePlugins.PrefixRewrite, Timeout: &dur}
+				mergedLeafLevelRoutePlugins := &gloov1.RoutePlugins{PrefixRewrite: &transformation.PrefixRewrite{PrefixRewrite: "leaf level plugin"}, Timeout: midLevelRoutePlugins.Timeout}
 
 				BeforeEach(func() {
 					translator = NewTranslator([]ListenerFactory{&HttpTranslator{}})
@@ -501,7 +530,7 @@ var _ = Describe("Translator", func() {
 									{
 										Matcher: &gloov1.Matcher{
 											PathSpecifier: &gloov1.Matcher_Prefix{
-												Prefix: "/1-upstream",
+												Prefix: "/a/1-upstream",
 											},
 										},
 										Action: &v1.Route_RouteAction{
@@ -522,12 +551,12 @@ var _ = Describe("Translator", func() {
 									{
 										Matcher: &gloov1.Matcher{
 											PathSpecifier: &gloov1.Matcher_Prefix{
-												Prefix: "/1-delegate",
+												Prefix: "/a/3-delegate",
 											},
 										},
 										Action: &v1.Route_DelegateAction{
 											DelegateAction: &core.ResourceRef{
-												Name:      "delegate-2",
+												Name:      "delegate-3",
 												Namespace: ns,
 											},
 										},
@@ -544,7 +573,7 @@ var _ = Describe("Translator", func() {
 									{
 										Matcher: &gloov1.Matcher{
 											PathSpecifier: &gloov1.Matcher_Prefix{
-												Prefix: "/2-upstream",
+												Prefix: "/b/2-upstream",
 											},
 										},
 										Action: &v1.Route_RouteAction{
@@ -565,7 +594,58 @@ var _ = Describe("Translator", func() {
 									{
 										Matcher: &gloov1.Matcher{
 											PathSpecifier: &gloov1.Matcher_Prefix{
-												Prefix: "/2-upstream-plugin-override",
+												Prefix: "/b/2-upstream-plugin-override",
+											},
+										},
+										Action: &v1.Route_RouteAction{
+											RouteAction: &gloov1.RouteAction{
+												Destination: &gloov1.RouteAction_Single{
+													Single: &gloov1.Destination{
+														DestinationType: &gloov1.Destination_Upstream{
+															Upstream: &core.ResourceRef{
+																Name:      "my-upstream",
+																Namespace: ns,
+															},
+														},
+													},
+												},
+											},
+										},
+										RoutePlugins: leafLevelRoutePlugins,
+									},
+								},
+							},
+							{
+								Metadata: core.Metadata{
+									Name:      "delegate-3",
+									Namespace: ns,
+								},
+								Routes: []*v1.Route{
+									{
+										Matcher: &gloov1.Matcher{
+											PathSpecifier: &gloov1.Matcher_Prefix{
+												Prefix: "/a/3-delegate/upstream1",
+											},
+										},
+										Action: &v1.Route_RouteAction{
+											RouteAction: &gloov1.RouteAction{
+												Destination: &gloov1.RouteAction_Single{
+													Single: &gloov1.Destination{
+														DestinationType: &gloov1.Destination_Upstream{
+															Upstream: &core.ResourceRef{
+																Name:      "my-upstream",
+																Namespace: ns,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									{
+										Matcher: &gloov1.Matcher{
+											PathSpecifier: &gloov1.Matcher_Prefix{
+												Prefix: "/a/3-delegate/upstream2",
 											},
 										},
 										Action: &v1.Route_RouteAction{
@@ -591,7 +671,7 @@ var _ = Describe("Translator", func() {
 				})
 				It("merges the vs and route tables to a single gloov1.VirtualHost", func() {
 					proxy, errs := translator.Translate(context.TODO(), "", ns, snap, snap.Gateways)
-					Expect(errs.Validate()).NotTo(HaveOccurred())
+					Expect(errs.ValidateStrict()).NotTo(HaveOccurred())
 					Expect(proxy.Listeners).To(HaveLen(1))
 					listener := proxy.Listeners[0].ListenerType.(*gloov1.Listener_HttpListener).HttpListener
 					Expect(listener.VirtualHosts).To(HaveLen(2))
@@ -634,7 +714,7 @@ var _ = Describe("Translator", func() {
 						&gloov1.Route{
 							Matcher: &gloov1.Matcher{
 								PathSpecifier: &gloov1.Matcher_Prefix{
-									Prefix: "/a/1-delegate/2-upstream",
+									Prefix: "/a/3-delegate/upstream1",
 								},
 							},
 							Action: &gloov1.Route_RouteAction{
@@ -651,12 +731,12 @@ var _ = Describe("Translator", func() {
 									},
 								},
 							},
-							RoutePlugins: midLevelRoutePlugins,
+							RoutePlugins: mergedMidLevelRoutePlugins,
 						},
 						&gloov1.Route{
 							Matcher: &gloov1.Matcher{
 								PathSpecifier: &gloov1.Matcher_Prefix{
-									Prefix: "/a/1-delegate/2-upstream-plugin-override",
+									Prefix: "/a/3-delegate/upstream2",
 								},
 							},
 							Action: &gloov1.Route_RouteAction{
@@ -673,7 +753,7 @@ var _ = Describe("Translator", func() {
 									},
 								},
 							},
-							RoutePlugins: leafLevelRoutePlugins,
+							RoutePlugins: mergedLeafLevelRoutePlugins,
 						},
 					}))
 					Expect(listener.VirtualHosts[1].Routes).To(Equal([]*gloov1.Route{
@@ -747,7 +827,7 @@ var _ = Describe("Translator", func() {
 										{
 											Matcher: &gloov1.Matcher{
 												PathSpecifier: &gloov1.Matcher_Prefix{
-													Prefix: "/a",
+													Prefix: "/",
 												},
 											},
 											Action: &v1.Route_DelegateAction{
@@ -771,7 +851,7 @@ var _ = Describe("Translator", func() {
 									{
 										Matcher: &gloov1.Matcher{
 											PathSpecifier: &gloov1.Matcher_Prefix{
-												Prefix: "/1-delegate",
+												Prefix: "/",
 											},
 										},
 										Action: &v1.Route_DelegateAction{
@@ -792,7 +872,7 @@ var _ = Describe("Translator", func() {
 									{
 										Matcher: &gloov1.Matcher{
 											PathSpecifier: &gloov1.Matcher_Prefix{
-												Prefix: "/2-delegate",
+												Prefix: "/",
 											},
 										},
 										Action: &v1.Route_DelegateAction{
@@ -809,7 +889,7 @@ var _ = Describe("Translator", func() {
 				})
 				It("detects cycle and returns error", func() {
 					_, errs := translator.Translate(context.TODO(), "", ns, snap, snap.Gateways)
-					err := errs.Validate()
+					err := errs.ValidateStrict()
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(ContainSubstring("cycle detected"))
 				})
@@ -881,7 +961,7 @@ var _ = Describe("Translator", func() {
 var expectedRouteMetadatas = [][]*RouteMetadata{
 	{
 		&RouteMetadata{
-			Source: []SourceRef{
+			Sources: []SourceRef{
 				{
 					ResourceRef: core.ResourceRef{
 						Name:      "delegate-1",
@@ -901,10 +981,10 @@ var expectedRouteMetadatas = [][]*RouteMetadata{
 			},
 		},
 		{
-			Source: []SourceRef{
+			Sources: []SourceRef{
 				{
 					ResourceRef: core.ResourceRef{
-						Name:      "delegate-2",
+						Name:      "delegate-3",
 						Namespace: "gloo-system",
 					},
 					ResourceKind:       "*v1.RouteTable",
@@ -929,10 +1009,10 @@ var expectedRouteMetadatas = [][]*RouteMetadata{
 			},
 		},
 		{
-			Source: []SourceRef{
+			Sources: []SourceRef{
 				{
 					ResourceRef: core.ResourceRef{
-						Name:      "delegate-2",
+						Name:      "delegate-3",
 						Namespace: "gloo-system",
 					},
 					ResourceKind:       "*v1.RouteTable",
@@ -959,7 +1039,7 @@ var expectedRouteMetadatas = [][]*RouteMetadata{
 	},
 	{
 		{
-			Source: []SourceRef{
+			Sources: []SourceRef{
 				{
 					ResourceRef: core.ResourceRef{
 						Name:      "delegate-2",
@@ -979,7 +1059,7 @@ var expectedRouteMetadatas = [][]*RouteMetadata{
 			},
 		},
 		{
-			Source: []SourceRef{
+			Sources: []SourceRef{
 				{
 					ResourceRef: core.ResourceRef{
 						Name:      "delegate-2",

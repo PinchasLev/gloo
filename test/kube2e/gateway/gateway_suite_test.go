@@ -8,6 +8,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/solo-io/gloo/pkg/cliutil/install"
+
+	"github.com/gogo/protobuf/types"
+	clienthelpers "github.com/solo-io/gloo/projects/gloo/cli/pkg/helpers"
+	"github.com/solo-io/solo-kit/pkg/api/v1/clients"
+
+	"github.com/pkg/errors"
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/cmd/check"
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/cmd/options"
+	"github.com/solo-io/solo-kit/pkg/api/v1/resources/core"
+
 	"github.com/solo-io/gloo/test/helpers"
 
 	"github.com/solo-io/go-utils/log"
@@ -57,6 +68,14 @@ func StartTestHelper() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 
+	RegisterFailHandler(func(message string, callerSkip ...int) {
+		glooLogs, _ := install.KubectlOut(nil, "logs", "-n", testHelper.InstallNamespace, "-l", "gloo=gloo")
+		gwLogs, _ := install.KubectlOut(nil, "logs", "-n", testHelper.InstallNamespace, "-l", "gloo=gateway")
+
+		fmt.Fprintf(GinkgoWriter, "\n\n\n\nGLOO LOGS\n\n%s\n\n\n\n", glooLogs)
+		fmt.Fprintf(GinkgoWriter, "\n\n\n\nGATEWAY LOGS\n\n%s\n\n\n\n", gwLogs)
+	})
+
 	skhelpers.RegisterPreFailHandler(helpers.KubeDumpOnFail(GinkgoWriter, "knative-serving", testHelper.InstallNamespace))
 	testHelper.Verbose = true
 
@@ -66,6 +85,35 @@ func StartTestHelper() {
 	values.Close()
 
 	err = testHelper.InstallGloo(helper.GATEWAY, 5*time.Minute, helper.ExtraArgs("--values", values.Name()))
+	Expect(err).NotTo(HaveOccurred())
+	Eventually(func() error {
+		opts := &options.Options{
+			Metadata: core.Metadata{
+				Namespace: testHelper.InstallNamespace,
+			},
+		}
+		ok, err := check.CheckResources(opts)
+		if err != nil {
+			return errors.Wrap(err, "unable to run glooctl check")
+		}
+		if ok {
+			return nil
+		}
+		return errors.New("glooctl check detected a problem with the installation")
+	}, "40s", "4s").Should(BeNil())
+
+	// enable strict validation
+	// this can be removed once we enable validation by default
+	// set projects/gateway/pkg/syncer.AcceptAllResourcesByDefault is set to false
+	settingsClient := clienthelpers.MustSettingsClient()
+	settings, err := settingsClient.Read(testHelper.InstallNamespace, "default", clients.ReadOpts{})
+	Expect(err).NotTo(HaveOccurred())
+
+	Expect(settings.Gateway).NotTo(BeNil())
+	Expect(settings.Gateway.Validation).NotTo(BeNil())
+	settings.Gateway.Validation.AlwaysAccept = &types.BoolValue{Value: false}
+
+	_, err = settingsClient.Write(settings, clients.WriteOpts{OverwriteExisting: true})
 	Expect(err).NotTo(HaveOccurred())
 }
 

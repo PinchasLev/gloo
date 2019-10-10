@@ -20,6 +20,18 @@ var _ = Describe("Install", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
+	const licenseKey = "--license-key=fake-license-key"
+
+	It("shouldn't get errors for enterprise dry run", func() {
+		_, err := testutils.GlooctlOut(fmt.Sprintf("install gateway enterprise --file %s --dry-run %s", file, licenseKey))
+		Expect(err).NotTo(HaveOccurred())
+	})
+
+	It("shouldn't get errors for enterprise upgrade dry run", func() {
+		_, err := testutils.GlooctlOut(fmt.Sprintf("install gateway enterprise --file %s --dry-run --upgrade", file))
+		Expect(err).NotTo(HaveOccurred())
+	})
+
 	It("shouldn't get errors for knative dry run", func() {
 		_, err := testutils.GlooctlOut(fmt.Sprintf("install knative --file %s --dry-run", file))
 		Expect(err).NotTo(HaveOccurred())
@@ -46,5 +58,11 @@ var _ = Describe("Install", func() {
 		_, err := testutils.GlooctlOut("install gateway --file foo.tgz")
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("installing gloo in gateway mode: retrieving gloo helm chart archive: opening file"))
+	})
+
+	It("should not error when providing the admin console flag", func() {
+		out, err := testutils.GlooctlOut("install gateway --dry-run --with-admin-console")
+		Expect(err).NotTo(HaveOccurred())
+		Expect(out).To(ContainSubstring("kind: Namespace"))
 	})
 })

@@ -12,13 +12,15 @@ import (
 func main() {
 	err := version.CheckVersions()
 	if err != nil {
-		log.Fatalf("generate failed!: %v", err)
+		log.Fatalf("generate failed!: %s", err.Error())
 	}
 	log.Printf("starting generate")
 
 	generateOptions := cmd.GenerateOptions{
-		SkipGenMocks:       true,
-		CustomImports:      nil,
+		SkipGenMocks: true,
+		CustomCompileProtos: []string{
+			"projects/gloo/api/grpc",
+		},
 		SkipGeneratedTests: true,
 		SkipDirs:           nil,
 		RelativeRoot:       "",

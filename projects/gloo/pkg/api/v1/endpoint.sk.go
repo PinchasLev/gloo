@@ -31,6 +31,9 @@ func (r *Endpoint) SetMetadata(meta core.Metadata) {
 func (r *Endpoint) Hash() uint64 {
 	metaCopy := r.GetMetadata()
 	metaCopy.ResourceVersion = ""
+	metaCopy.Generation = 0
+	// investigate zeroing out owner refs as well
+	metaCopy.Annotations = nil
 	return hashutils.HashAll(
 		metaCopy,
 		r.Upstreams,

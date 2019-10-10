@@ -9,12 +9,17 @@ import (
 	"github.com/gogo/protobuf/types"
 	v1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1"
 	"github.com/solo-io/gloo/projects/gloo/pkg/plugins"
+	"github.com/solo-io/gloo/projects/gloo/pkg/plugins/pluginutils"
 	translatorutil "github.com/solo-io/gloo/projects/gloo/pkg/translator"
 	usconversion "github.com/solo-io/gloo/projects/gloo/pkg/upstreams"
 	"github.com/solo-io/gloo/projects/gloo/pkg/utils"
 	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/errors"
 	"go.uber.org/zap"
+)
+
+const (
+	DefaultTcpStatPrefix = "tcp"
 )
 
 func NewPlugin() *Plugin {
@@ -53,8 +58,11 @@ func (p *Plugin) ProcessListenerFilterChain(params plugins.Params, in *v1.Listen
 	for _, tcpHost := range tcpListener.TcpHosts {
 
 		var listenerFilters []envoylistener.Filter
-
-		tcpFilter, err := tcpProxyFilter(params, tcpHost, tcpListener.GetPlugins())
+		statPrefix := tcpListener.GetStatPrefix()
+		if statPrefix == "" {
+			statPrefix = DefaultTcpStatPrefix
+		}
+		tcpFilter, err := tcpProxyFilter(params, tcpHost, tcpListener.GetPlugins(), statPrefix)
 		if err != nil {
 			logger.Errorw("could not compute tcp proxy filter", zap.Error(err), zap.Any("tcpHost", tcpHost))
 			continue
@@ -72,9 +80,10 @@ func (p *Plugin) ProcessListenerFilterChain(params plugins.Params, in *v1.Listen
 	return filterChains, nil
 }
 
-func tcpProxyFilter(params plugins.Params, host *v1.TcpHost, plugins *v1.TcpListenerPlugins) (*listener.Filter, error) {
+func tcpProxyFilter(params plugins.Params, host *v1.TcpHost, plugins *v1.TcpListenerPlugins, statPrefix string) (*listener.Filter, error) {
+
 	cfg := &envoytcp.TcpProxy{
-		StatPrefix: "tcp",
+		StatPrefix: statPrefix,
 	}
 
 	if plugins != nil {
@@ -108,7 +117,7 @@ func tcpProxyFilter(params plugins.Params, host *v1.TcpHost, plugins *v1.TcpList
 		upstreamGroupRef := dest.UpstreamGroup
 		upstreamGroup, err := params.Snapshot.UpstreamGroups.Find(upstreamGroupRef.Namespace, upstreamGroupRef.Name)
 		if err != nil {
-			return nil, err
+			return nil, pluginutils.NewUpstreamGroupNotFoundErr(*upstreamGroupRef)
 		}
 		md := &v1.MultiDestination{
 			Destinations: upstreamGroup.Destinations,

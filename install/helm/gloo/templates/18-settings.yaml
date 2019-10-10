@@ -11,7 +11,8 @@ metadata:
     "helm.sh/hook": pre-install
     "helm.sh/hook-weight": "5"
 spec:
-  bindAddr: 0.0.0.0:{{ .Values.gloo.deployment.xdsPort }}
+  gloo:
+   xdsBindAddr: 0.0.0.0:{{ .Values.gloo.deployment.xdsPort }}
 {{- if .Values.settings.writeNamespace }}
   discoveryNamespace: {{ .Values.settings.writeNamespace }}
 {{- else }}
@@ -28,6 +29,18 @@ spec:
 {{- else }}
     knativeExternalProxyAddress: "knative-external-proxy.{{ .Release.Namespace }}.svc.{{ $.Values.k8s.clusterName}}"
     knativeInternalProxyAddress: "knative-internal-proxy.{{ .Release.Namespace }}.svc.{{ $.Values.k8s.clusterName}}"
+{{- end }}
+{{- end }}
+
+{{- if .Values.gateway.validation }}
+  gateway:
+    validation:
+      proxyValidationServerAddr: gloo:{{ .Values.gloo.deployment.validationPort }}
+{{- /* need to do this weird if/else because Helm cannot differentiate between 'false' and 'unset' */}}
+{{- if .Values.gateway.validation.alwaysAcceptResources }}
+      alwaysAccept: true
+{{- else }}
+      alwaysAccept: false
 {{- end }}
 {{- end }}
 
