@@ -1,0 +1,22 @@
+kubectl apply --filename - <<EOF
+apiVersion: gateway.solo.io/v1
+kind: VirtualService
+metadata:
+  name: petstore
+  namespace: gloo-system
+spec:
+  virtualHost:
+    domains:
+    - 'www.petstore.com'
+    routes:
+    - matcher:
+        prefix: /
+      routeAction:
+        single:
+          upstream:
+            name: petstore-petstore-4000
+            namespace: gloo-system
+      routePlugins:
+        prefixRewrite:
+          prefixRewrite: /api/pets
+EOF

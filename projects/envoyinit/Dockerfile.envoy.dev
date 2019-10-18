@@ -1,0 +1,39 @@
+FROM golang:1.12.9 AS build
+
+ARG GOPATH
+
+ENV GOPATH=/go
+
+ADD . /go/src/github.com/gloo
+
+RUN apt-get update
+
+RUN apt-get install -y \
+      bash \
+      curl \
+      make \
+      git \
+      docker \
+    && rm -rf /var/cache/apk/* \
+    && cd $GOPATH/src/github.com/gloo
+
+ENV GOPATH=$GOPATH
+
+RUN go get -u github.com/golang/dep/cmd/dep
+
+WORKDIR /go/src/github.com/gloo
+
+RUN /go/bin/dep ensure -v
+
+RUN make envoyinit
+
+#FROM scratch AS final
+FROM quay.io/solo-io/envoy-gloo:0.1.17
+
+ENV PATH=/bin:/usr/bin:/sbin:/usr/sbin:$PATH
+
+COPY --from=build /go/src/github.com/gloo/_output/envoyinit /bin/envoyinit
+COPY --from=build /bin/bash /bin/bash
+
+ENTRYPOINT ["/usr/bin/dumb-init", "--", "/bin/envoyinit"]
+CMD []

@@ -140,7 +140,7 @@ gateway-push: gateway-docker
 DISCOVERY_DIR=projects/discovery
 DISCOVERY_SOURCES=$(call get_sources,$(DISCOVERY_DIR))
 discovery:
-	CGO_ENABLED=0 GOOS=linux go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o $@ $(DISCOVERY_DIR)/cmd/main.go
+	CGO_ENABLED=0 GOOS=linux go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o $(OUTPUT_DIR)/$@ $(DISCOVERY_DIR)/cmd/main.go
 
 discovery-docker:
 	docker build -t pinchaslev/discovery-img:$(VERSION) -f $(DISCOVERY_DIR)/Dockerfile.discovery.dev .
@@ -157,7 +157,7 @@ discovery-push: discovery-docker
 GLOO_DIR=projects/gloo
 GLOO_SOURCES=$(call get_sources,$(GLOO_DIR))
 gloo:
-	CGO_ENABLED=0 GOOS=linux go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o $@ $(GLOO_DIR)/cmd/main.go
+	CGO_ENABLED=0 GOOS=linux go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o $(OUTPUT_DIR)/$@ $(GLOO_DIR)/cmd/main.go
 
 gloo-docker:
 	docker build -t pinchaslev/gloo-img:$(VERSION) -f $(GLOO_DIR)/Dockerfile.gloo.dev .
@@ -174,7 +174,7 @@ gloo-push: gloo-docker
 ENVOYINIT_DIR=projects/envoyinit
 ENVOYINIT_SOURCES=$(call get_sources,$(ENVOYINIT_DIR))
 envoyinit:
-	CGO_ENABLED=0 GOOS=linux go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o $@ $(ENVOYINIT_DIR)/cmd/main.go
+	CGO_ENABLED=0 GOOS=linux go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o $(OUTPUT_DIR)/$@ $(ENVOYINIT_DIR)/cmd/main.go
 
 envoyinit-docker:
 	docker build -t pinchaslev/envoy-wrapper-img:$(VERSION) -f $(ENVOYINIT_DIR)/Dockerfile.envoy.dev .

@@ -1,0 +1,24 @@
+kubectl apply --filename - <<EOF
+apiVersion: gateway.solo.io/v1
+kind: VirtualService
+metadata:
+  name: ping-pong-tls-bad
+  namespace: hw
+spec:
+  sslConfig:
+    secretRef:
+      name: phylake-secret
+      namespace: foobar
+  virtualHost:
+    domains:
+    - 'ping.pong.bad.com'
+    routes:
+    - matcher:
+        prefix: /
+      routeAction:
+        single:
+          upstream:
+            name: hw-hw-3000
+            namespace: heptio-contour
+      routePlugins:
+EOF

@@ -1,0 +1,54 @@
+kubectl apply --filename - <<EOF
+apiVersion: gateway.solo.io/v1
+kind: VirtualService
+metadata:
+  name: weightshift-reverse
+  namespace: gloo-system
+spec:
+  virtualHost:
+    domains:
+    - 'weightshift-reverse.com'
+    routes:
+    - matcher:
+        prefix: /api/pets
+      routeAction:
+        multi:
+          destinations:
+          - destination:
+              upstream:
+                name: petstore-petstore-4000
+                namespace: gloo-system
+            weight: 1
+          - weight: 9
+            destination:
+              upstream:
+                name: hw-basic-hw-basic-3333
+                namespace: gloo-system
+      routePlugins:
+        lbHash:
+          hashPolicies:
+          - sourceIp: true
+#        faults:
+#          delay:
+#            percentage: 100
+#            fixedDelay: '10s'
+#        timeout: '3ns'
+    - matcher:
+        prefix: /
+      routeAction:
+        multi:
+          destinations:
+          - weight: 9
+            destination:
+              upstream:
+                name: petstore-petstore-4000
+                namespace: gloo-system
+          - weight: 1
+            destination:
+              upstream:
+                name: hw-hw-3000
+                namespace: gloo-system
+      routePlugins:
+        prefixRewrite:
+          prefixRewrite: /api/pets
+EOF

@@ -1,0 +1,20 @@
+kubectl apply --filename - <<EOF
+apiVersion: gateway.solo.io/v1
+kind: VirtualService
+metadata:
+  name: ping-pong-basic
+  namespace: heptio-contour
+spec:
+  virtualHost:
+    domains:
+    - 'ping.pong.basic.service'
+    routes:
+    - matcher:
+        prefix: /
+      routeAction:
+        single:
+          upstream:
+            name: hw-hw-3000
+            namespace: heptio-contour
+      routePlugins:
+EOF

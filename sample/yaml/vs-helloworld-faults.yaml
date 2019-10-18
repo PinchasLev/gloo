@@ -1,0 +1,25 @@
+kubectl apply --filename - <<EOF
+apiVersion: gateway.solo.io/v1
+kind: VirtualService
+metadata:
+  name: ping-pong-faults
+  namespace: heptio-contour
+spec:
+  virtualHost:
+    domains:
+    - 'ping.pong.faults.service'
+    routes:
+    - matcher:
+        prefix: /
+      routeAction:
+        single:
+          upstream:
+            name: hw-hw-3000
+            namespace: heptio-contour
+      routePlugins:
+        faults:
+          delay:
+            percentage: 100
+            fixedDelay: '10s'
+        timeout: '3ns'
+EOF

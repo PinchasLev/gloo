@@ -1,0 +1,45 @@
+FROM golang:1.12.9 AS build
+
+ARG GOPATH
+#ARG OUTPUT_DIR
+#ARG ROOTDIR
+
+ENV GOPATH=/go
+
+# Recompile everything and create a static binary
+#ENV CGO_ENABLED=0
+#CMD go build -v -a --installsuffix cgo -ldflags '-s' -o /host/porter
+
+ADD . /go/src/github.com/gloo
+
+#RUN mkdir /go/bin
+
+RUN apt-get update
+
+RUN apt-get install -y \
+      bash \
+      curl \
+      make \
+      git \
+      docker \
+    && rm -rf /var/cache/apk/* \
+    && cd $GOPATH/src/github.com/gloo
+
+ENV GOPATH=$GOPATH
+
+RUN go get -u github.com/golang/dep/cmd/dep
+
+WORKDIR /go/src/github.com/gloo
+
+RUN /go/bin/dep ensure -v
+
+RUN make glooctl
+
+FROM scratch AS final
+
+ENV PATH=/bin:/usr/bin:/sbin:/usr/sbin:$PATH
+
+COPY --from=build /go/src/github.com/gloo/_output/glooctl /bin/glooctl
+COPY --from=build /bin/bash /bin/bash
+
+# CMD /bin/bash

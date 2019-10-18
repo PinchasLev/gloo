@@ -1,0 +1,20 @@
+kubectl apply --filename - <<EOF
+apiVersion: gateway.solo.io/v1
+kind: VirtualService
+metadata:
+  name: ping-pong
+  namespace: gloo-system
+spec:
+  virtualHost:
+    domains:
+    - 'ping.pong.service'
+    routes:
+    - matcher:
+        prefix: /
+      routeAction:
+        single:
+          upstream:
+            name: hw-hw-3000
+            namespace: gloo-system
+      routePlugins:
+EOF

@@ -1,0 +1,3298 @@
+{
+ "configs": [
+  {
+   "@type": "type.googleapis.com/envoy.admin.v2alpha.BootstrapConfigDump",
+   "bootstrap": {
+    "node": {
+     "id": "gateway-proxy-v2-77bfdb4669-6mfjr.gloo-system",
+     "cluster": "gateway",
+     "metadata": {
+      "role": "gloo-system~gateway-proxy-v2"
+     },
+     "build_version": "646b9930d2375c5d4991bca49076f14b1f773423/1.12.0-dev/Distribution/RELEASE/BoringSSL"
+    },
+    "static_resources": {
+     "listeners": [
+      {
+       "name": "prometheus_listener",
+       "address": {
+        "socket_address": {
+         "address": "0.0.0.0",
+         "port_value": 8081
+        }
+       },
+       "filter_chains": [
+        {
+         "filters": [
+          {
+           "name": "envoy.http_connection_manager",
+           "config": {
+            "route_config": {
+             "virtual_hosts": [
+              {
+               "routes": [
+                {
+                 "match": {
+                  "path": "/ready",
+                  "headers": [
+                   {
+                    "name": ":method",
+                    "exact_match": "GET"
+                   }
+                  ]
+                 },
+                 "route": {
+                  "cluster": "admin_port_cluster"
+                 }
+                },
+                {
+                 "route": {
+                  "prefix_rewrite": "/stats/prometheus",
+                  "cluster": "admin_port_cluster"
+                 },
+                 "match": {
+                  "headers": [
+                   {
+                    "exact_match": "GET",
+                    "name": ":method"
+                   }
+                  ],
+                  "prefix": "/metrics"
+                 }
+                }
+               ],
+               "domains": [
+                "*"
+               ],
+               "name": "prometheus_host"
+              }
+             ],
+             "name": "prometheus_route"
+            },
+            "codec_type": "auto",
+            "http_filters": [
+             {
+              "name": "envoy.router",
+              "config": {}
+             }
+            ],
+            "stat_prefix": "prometheus"
+           }
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "clusters": [
+      {
+       "name": "gloo.gloo-system.svc.cluster.local:9977",
+       "type": "STRICT_DNS",
+       "connect_timeout": "5s",
+       "http2_protocol_options": {},
+       "alt_stat_name": "xds_cluster",
+       "upstream_connection_options": {
+        "tcp_keepalive": {}
+       },
+       "load_assignment": {
+        "cluster_name": "gloo.gloo-system.svc.cluster.local:9977",
+        "endpoints": [
+         {
+          "lb_endpoints": [
+           {
+            "endpoint": {
+             "address": {
+              "socket_address": {
+               "address": "gloo.gloo-system.svc.cluster.local",
+               "port_value": 9977
+              }
+             }
+            }
+           }
+          ]
+         }
+        ]
+       },
+       "respect_dns_ttl": true
+      },
+      {
+       "name": "admin_port_cluster",
+       "type": "STATIC",
+       "connect_timeout": "5s",
+       "load_assignment": {
+        "cluster_name": "admin_port_cluster",
+        "endpoints": [
+         {
+          "lb_endpoints": [
+           {
+            "endpoint": {
+             "address": {
+              "socket_address": {
+               "address": "127.0.0.1",
+               "port_value": 19000
+              }
+             }
+            }
+           }
+          ]
+         }
+        ]
+       }
+      }
+     ]
+    },
+    "dynamic_resources": {
+     "lds_config": {
+      "ads": {}
+     },
+     "cds_config": {
+      "ads": {}
+     },
+     "ads_config": {
+      "api_type": "GRPC",
+      "grpc_services": [
+       {
+        "envoy_grpc": {
+         "cluster_name": "gloo.gloo-system.svc.cluster.local:9977"
+        }
+       }
+      ],
+      "rate_limit_settings": {}
+     }
+    },
+    "admin": {
+     "access_log_path": "/dev/null",
+     "address": {
+      "socket_address": {
+       "address": "127.0.0.1",
+       "port_value": 19000
+      }
+     }
+    }
+   },
+   "last_updated": "2019-09-17T14:59:42.105Z"
+  },
+  {
+   "@type": "type.googleapis.com/envoy.admin.v2alpha.ClustersConfigDump",
+   "version_info": "8850446167417942232",
+   "static_clusters": [
+    {
+     "cluster": {
+      "name": "admin_port_cluster",
+      "type": "STATIC",
+      "connect_timeout": "5s",
+      "load_assignment": {
+       "cluster_name": "admin_port_cluster",
+       "endpoints": [
+        {
+         "lb_endpoints": [
+          {
+           "endpoint": {
+            "address": {
+             "socket_address": {
+              "address": "127.0.0.1",
+              "port_value": 19000
+             }
+            }
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "last_updated": "2019-09-17T14:59:42.134Z"
+    },
+    {
+     "cluster": {
+      "name": "gloo.gloo-system.svc.cluster.local:9977",
+      "type": "STRICT_DNS",
+      "connect_timeout": "5s",
+      "http2_protocol_options": {},
+      "alt_stat_name": "xds_cluster",
+      "upstream_connection_options": {
+       "tcp_keepalive": {}
+      },
+      "load_assignment": {
+       "cluster_name": "gloo.gloo-system.svc.cluster.local:9977",
+       "endpoints": [
+        {
+         "lb_endpoints": [
+          {
+           "endpoint": {
+            "address": {
+             "socket_address": {
+              "address": "gloo.gloo-system.svc.cluster.local",
+              "port_value": 9977
+             }
+            }
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "respect_dns_ttl": true
+     },
+     "last_updated": "2019-09-17T14:59:42.133Z"
+    }
+   ],
+   "dynamic_active_clusters": [
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "canary-canary-80_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.600Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "default-kubernetes-443_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.616Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "gloo-system-gateway-proxy-v2-6000_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.582Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "gloo-system-gateway-proxy-v2-6001_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.560Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "gloo-system-gateway-proxy-v2-gateway-proxy-6000_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.569Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "gloo-system-gateway-proxy-v2-gateway-proxy-6001_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.598Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "gloo-system-gloo-9977_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "http2_protocol_options": {},
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.557Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "heptio-contour-contour-corp-envoy-metrics-svc-8524_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.558Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "heptio-contour-contour-corp-svc-8000_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.608Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "heptio-contour-contour-corp-svc-8520_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.558Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "heptio-contour-contour-internal-envoy-metrics-svc-8544_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.592Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "heptio-contour-contour-internal-svc-8000_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.585Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "heptio-contour-contour-internal-svc-8540_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.562Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "heptio-contour-contour-public-envoy-metrics-svc-8504_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.591Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "heptio-contour-contour-public-svc-8000_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.602Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "heptio-contour-contour-public-svc-8500_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.597Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "hw-hw-3000_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.553Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:canary-canary-80_canary",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.566Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:default-kubernetes-443_default",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.554Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:gloo-system-gateway-proxy-v2-6000_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.566Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:gloo-system-gateway-proxy-v2-6001_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.614Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:gloo-system-gloo-9977_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "http2_protocol_options": {},
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.560Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:heptio-contour-contour-corp-envoy-metrics-svc-8524_heptio-contour",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.603Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:heptio-contour-contour-corp-svc-8000_heptio-contour",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.593Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:heptio-contour-contour-corp-svc-8520_heptio-contour",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.604Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:heptio-contour-contour-internal-envoy-metrics-svc-8544_heptio-contour",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.577Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:heptio-contour-contour-internal-svc-8000_heptio-contour",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.588Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:heptio-contour-contour-internal-svc-8540_heptio-contour",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.552Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:heptio-contour-contour-public-envoy-metrics-svc-8504_heptio-contour",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.588Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:heptio-contour-contour-public-svc-8000_heptio-contour",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.573Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:heptio-contour-contour-public-svc-8500_heptio-contour",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.585Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:hw-hw-3000_hw",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.599Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:kube-system-cilium-metrics-svc-9090_kube-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.559Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:kube-system-cluster-autoscaler-metrics-svc-8085_kube-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.561Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:kube-system-dashboard-proxy-80_kube-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.615Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:kube-system-etcd-2379_kube-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.583Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:kube-system-fluent-bit-audit-2020_kube-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.610Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:kube-system-kube-controller-manager-metrics-svc-10257_kube-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.611Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:kube-system-kube-dns-53_kube-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.616Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:kube-system-kube-dns-9153_kube-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.601Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:kube-system-kube-dns-metrics-svc-9153_kube-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.594Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:kube-system-kube-scheduler-metrics-svc-10259_kube-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.576Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:kube-system-kubelet-10250_kube-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.600Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:kube-system-kubernetes-dashboard-443_kube-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.559Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:kube-system-metrics-server-443_kube-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.570Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:kube-system-vpa-webhook-443_kube-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.600Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-alertmanager-main-9093_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.594Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-alertmanager-operated-6783_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.611Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-alertmanager-operated-9093_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.570Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-alertmanager-proxy-80_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.604Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-blackbox-exporter-9115_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.574Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-cloudwatch-exporter-9106_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.571Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-goldpinger-cni-80_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.551Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-goldpinger-hostnetwork-80_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.564Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-grafana-3000_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.555Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-grafana-proxy-80_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.584Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-kube-state-metrics-8443_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.602Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-kube-state-metrics-9443_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.575Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-node-exporter-9100_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.577Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-prometheus-adapter-443_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.589Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-prometheus-k8s-10902_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.582Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-prometheus-k8s-9090_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.586Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-prometheus-k8s-a-10902_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.594Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-prometheus-k8s-a-9090_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.552Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-prometheus-k8s-a-proxy-80_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.605Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-prometheus-k8s-b-10902_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.574Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-prometheus-k8s-b-9090_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.569Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-prometheus-k8s-b-proxy-80_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.580Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-prometheus-k8s-c-10902_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.609Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-prometheus-k8s-c-9090_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.611Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-prometheus-k8s-c-proxy-80_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.586Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-prometheus-operated-9090_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.589Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-prometheus-operator-8080_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.613Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-prometheus-proxy-80_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.597Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-prometheus-pushgw-9079_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.564Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-thanos-query-10901_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "http2_protocol_options": {},
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.609Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-thanos-query-9090_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.590Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-thanos-query-proxy-80_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.557Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-thanos-ruler-9090_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.595Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-thanos-ruler-proxy-80_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.598Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:monitoring-thanos-store-api-10901_monitoring",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "http2_protocol_options": {},
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.561Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:opa-opa-443_opa",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.555Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-svc:velero-velero-metrics-8085_velero",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.590Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-system-cilium-metrics-svc-9090_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.571Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-system-cilium-metrics-svc-true-9090_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.567Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-system-cluster-autoscaler-metrics-svc-8085_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.605Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-system-dashboard-proxy-80_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.553Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-system-etcd-2379_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.614Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-system-fluent-bit-audit-2020_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.612Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-system-kube-controller-manager-metrics-svc-10257_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.614Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-system-kube-dns-53_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.556Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-system-kube-dns-9153_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.617Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-system-kube-dns-metrics-svc-9153_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.582Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-system-kube-scheduler-metrics-svc-10259_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.580Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-system-kubelet-10250_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.567Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-system-kubernetes-dashboard-443_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.564Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-system-metrics-server-443_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.567Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-system-metrics-server-v0-3-1-443_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.556Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "kube-system-vpa-webhook-443_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.562Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-alertmanager-main-9093_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.612Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-alertmanager-main-alertmanager-main-0-9093_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.606Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-alertmanager-main-alertmanager-main-1-9093_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.568Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-alertmanager-main-alertmanager-main-2-9093_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.565Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-alertmanager-operated-6783_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.580Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-alertmanager-operated-9093_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.595Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-alertmanager-operated-main-alertmanager-main-0-6783_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.568Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-alertmanager-operated-main-alertmanager-main-0-9093_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.610Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-alertmanager-operated-main-alertmanager-main-1-6783_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.553Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-alertmanager-operated-main-alertmanager-main-1-9093_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.551Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-alertmanager-operated-main-alertmanager-main-2-6783_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.548Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-alertmanager-operated-main-alertmanager-main-2-9093_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.606Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-alertmanager-proxy-80_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.581Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-blackbox-exporter-9115_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.549Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-cloudwatch-exporter-9106_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.578Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-goldpinger-cni-80_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.605Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-goldpinger-hostnetwork-80_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.602Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-grafana-3000_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.562Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-grafana-proxy-80_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.563Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-kube-state-metrics-8443_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.576Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-kube-state-metrics-9443_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.581Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-node-exporter-9100_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.552Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-adapter-443_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.574Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-10902_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.578Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-9090_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.556Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-a-10902_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.576Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-a-9090_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.563Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-a-prometheus-k8s-a-0-true-10902_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.579Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-a-prometheus-k8s-a-0-true-9090_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.595Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-a-prometheus-k8s-a-1-true-10902_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.558Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-a-prometheus-k8s-a-1-true-9090_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.599Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-a-proxy-80_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.589Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-a-proxy-prometheus-80_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.549Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-b-10902_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.563Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-b-9090_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.583Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-b-prometheus-k8s-b-0-true-10902_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.554Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-b-prometheus-k8s-b-0-true-9090_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.549Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-b-prometheus-k8s-b-1-true-10902_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.615Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-b-prometheus-k8s-b-1-true-9090_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.577Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-b-proxy-80_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.571Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-b-proxy-prometheus-80_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.612Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-c-10902_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.572Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-c-9090_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.569Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-c-prometheus-k8s-c-0-true-10902_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.616Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-c-prometheus-k8s-c-0-true-9090_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.554Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-c-prometheus-k8s-c-1-true-10902_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.550Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-c-prometheus-k8s-c-1-true-9090_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.607Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-c-proxy-80_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.587Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-c-proxy-prometheus-80_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.607Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-prometheus-k8s-0-true-10902_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.592Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-prometheus-k8s-0-true-9090_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.593Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-prometheus-k8s-1-true-10902_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.565Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-k8s-prometheus-k8s-1-true-9090_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.572Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-operated--007bf2422a547b45f2ae23467fc65fe_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.583Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-operated--08c6c7e078f880f48cd2b1a8e082244_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.591Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-operated--1bf6aa2bfd40a8139db7e9aeee479ab_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.550Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-operated--32801a39ff0a68c18d3d69899e4a6dc_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.599Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-operated--d19c393636525a005f04ba745986eef_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.573Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-operated--ea7735ebc8b51a1a9d85789557d1998_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.603Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-operated-9090_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.581Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-operated-k8s-prometheus-k8s-0-true-9090_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.593Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-operated-k8s-prometheus-k8s-1-true-9090_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.566Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-operator-8080_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.596Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-operator-v0-31-1-8080_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.601Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-proxy-80_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.615Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-proxy-prometheus-80_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.575Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-prometheus-pushgw-9079_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.603Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-thanos-query-10901_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "http2_protocol_options": {},
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.551Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-thanos-query-9090_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.601Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-thanos-query-proxy-80_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.598Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-thanos-query-true-10901_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "http2_protocol_options": {},
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.579Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-thanos-query-true-9090_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.557Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-thanos-ruler-9090_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.590Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-thanos-ruler-proxy-80_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.587Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-thanos-ruler-thanos-ruler-0-true-9090_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.591Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-thanos-ruler-thanos-ruler-1-true-9090_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.596Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-thanos-store-api-10901_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "http2_protocol_options": {},
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.608Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-thanos-store-api-pro-3460c49311fa0cbe132c5bcf5814c76_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "http2_protocol_options": {},
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.586Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-thanos-store-api-pro-4424c567fe0901b2735863986abcfac_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "http2_protocol_options": {},
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.608Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-thanos-store-api-pro-4f42bdb4b4b736ce0a752198da9e7d3_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "http2_protocol_options": {},
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.587Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-thanos-store-api-pro-546ae36661f583a506b89fe2d965ac3_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "http2_protocol_options": {},
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.609Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-thanos-store-api-pro-9e9d9acc826a4578ec05e5575b270f0_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "http2_protocol_options": {},
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.560Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-thanos-store-api-pro-b97de3489d8b18690b64f0628e573c6_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "http2_protocol_options": {},
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.597Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-thanos-store-api-pro-cca59ecd1a1078b40bc5372a716acd4_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "http2_protocol_options": {},
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.579Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-thanos-store-api-pro-f8bbda3db59acda7dc7f02442714d99_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "http2_protocol_options": {},
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.559Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-thanos-store-api-thanos-ruler-thanos-ruler-0-10901_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "http2_protocol_options": {},
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.573Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "monitoring-thanos-store-api-thanos-ruler-thanos-ruler-1-10901_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "http2_protocol_options": {},
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.613Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "opa-opa-443_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.568Z"
+    },
+    {
+     "version_info": "8850446167417942232",
+     "cluster": {
+      "name": "velero-velero-metrics-8085_gloo-system",
+      "type": "EDS",
+      "eds_cluster_config": {
+       "eds_config": {
+        "ads": {}
+       }
+      },
+      "connect_timeout": "5s",
+      "metadata": {}
+     },
+     "last_updated": "2019-09-17T15:12:21.570Z"
+    }
+   ]
+  },
+  {
+   "@type": "type.googleapis.com/envoy.admin.v2alpha.ListenersConfigDump",
+   "version_info": "1469495526032734038",
+   "static_listeners": [
+    {
+     "listener": {
+      "name": "prometheus_listener",
+      "address": {
+       "socket_address": {
+        "address": "0.0.0.0",
+        "port_value": 8081
+       }
+      },
+      "filter_chains": [
+       {
+        "filters": [
+         {
+          "name": "envoy.http_connection_manager",
+          "config": {
+           "route_config": {
+            "name": "prometheus_route",
+            "virtual_hosts": [
+             {
+              "name": "prometheus_host",
+              "routes": [
+               {
+                "route": {
+                 "cluster": "admin_port_cluster"
+                },
+                "match": {
+                 "path": "/ready",
+                 "headers": [
+                  {
+                   "exact_match": "GET",
+                   "name": ":method"
+                  }
+                 ]
+                }
+               },
+               {
+                "route": {
+                 "prefix_rewrite": "/stats/prometheus",
+                 "cluster": "admin_port_cluster"
+                },
+                "match": {
+                 "headers": [
+                  {
+                   "exact_match": "GET",
+                   "name": ":method"
+                  }
+                 ],
+                 "prefix": "/metrics"
+                }
+               }
+              ],
+              "domains": [
+               "*"
+              ]
+             }
+            ]
+           },
+           "codec_type": "auto",
+           "http_filters": [
+            {
+             "name": "envoy.router",
+             "config": {}
+            }
+           ],
+           "stat_prefix": "prometheus"
+          }
+         }
+        ]
+       }
+      ]
+     },
+     "last_updated": "2019-09-17T14:59:42.136Z"
+    }
+   ],
+   "dynamic_active_listeners": [
+    {
+     "version_info": "1469495526032734038",
+     "listener": {
+      "name": "listener-::-8080",
+      "address": {
+       "socket_address": {
+        "address": "::",
+        "port_value": 8080,
+        "ipv4_compat": true
+       }
+      },
+      "filter_chains": [
+       {
+        "filters": [
+         {
+          "name": "envoy.http_connection_manager",
+          "config": {
+           "upgrade_configs": [
+            {
+             "upgrade_type": "websocket"
+            }
+           ],
+           "http_filters": [
+            {
+             "name": "envoy.fault"
+            },
+            {
+             "name": "envoy.cors"
+            },
+            {
+             "name": "io.solo.transformation"
+            },
+            {
+             "name": "envoy.router"
+            }
+           ],
+           "rds": {
+            "route_config_name": "listener-::-8080-routes",
+            "config_source": {
+             "ads": {}
+            }
+           },
+           "normalize_path": true,
+           "stat_prefix": "http"
+          }
+         }
+        ],
+        "use_proxy_proto": false
+       }
+      ]
+     },
+     "last_updated": "2019-09-17T15:12:21.547Z"
+    }
+   ]
+  },
+  {
+   "@type": "type.googleapis.com/envoy.admin.v2alpha.ScopedRoutesConfigDump"
+  },
+  {
+   "@type": "type.googleapis.com/envoy.admin.v2alpha.RoutesConfigDump",
+   "static_route_configs": [
+    {
+     "route_config": {
+      "name": "prometheus_route",
+      "virtual_hosts": [
+       {
+        "name": "prometheus_host",
+        "domains": [
+         "*"
+        ],
+        "routes": [
+         {
+          "match": {
+           "path": "/ready",
+           "headers": [
+            {
+             "name": ":method",
+             "exact_match": "GET"
+            }
+           ]
+          },
+          "route": {
+           "cluster": "admin_port_cluster"
+          }
+         },
+         {
+          "match": {
+           "prefix": "/metrics",
+           "headers": [
+            {
+             "name": ":method",
+             "exact_match": "GET"
+            }
+           ]
+          },
+          "route": {
+           "cluster": "admin_port_cluster",
+           "prefix_rewrite": "/stats/prometheus"
+          }
+         }
+        ]
+       }
+      ]
+     },
+     "last_updated": "2019-09-17T14:59:42.136Z"
+    }
+   ],
+   "dynamic_route_configs": [
+    {
+     "version_info": "1944812974356738657",
+     "route_config": {
+      "name": "listener-::-8080-routes",
+      "virtual_hosts": [
+       {
+        "name": "gloo-system_ping-pong",
+        "domains": [
+         "ping.pong.service"
+        ],
+        "routes": [
+         {
+          "match": {
+           "prefix": "/"
+          },
+          "route": {
+           "cluster": "hw-hw-3000_gloo-system"
+          }
+         }
+        ]
+       }
+      ]
+     },
+     "last_updated": "2019-09-17T15:12:21.617Z"
+    }
+   ]
+  },
+  {
+   "@type": "type.googleapis.com/envoy.admin.v2alpha.SecretsConfigDump"
+  }
+ ]
+}

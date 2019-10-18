@@ -1,0 +1,25 @@
+apiVersion: gloo.solo.io/v1
+kind: Upstream
+metadata:
+  name: hw-hw-3000
+  namespace: heptio-contour
+spec:
+  discoveryMetadata: {}
+  upstreamSpec:
+    kube:
+      selector:
+        app: hw
+      serviceName: hw
+      serviceNamespace: hw
+      servicePort: 3000
+    loadBalancerConfig:
+      maglev: {}
+    useHttp2: true
+    healthChecks:
+      - httpHealthCheck:
+          path: /health
+        timeout: "1s"
+        healthyThreshold: 1
+        unhealthyThreshold: 3
+        interval: '5s'
+        unhealthyInterval: '5s'

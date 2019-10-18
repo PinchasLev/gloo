@@ -1,0 +1,20 @@
+apiVersion: gloo.solo.io/v1
+kind: Upstream
+metadata:
+  name: hw-hw-3000
+  namespace: heptio-contour
+spec:
+  upstreamSpec:
+    sslConfig:
+#      sni: lt.phylake.com
+#      verifySubjectAltName:
+#        - lt.phylake.com
+      secretRef:
+        name: phylake-secret
+        namespace: hw
+    kube:
+      selector:
+        app: hw
+      serviceName: hw
+      serviceNamespace: hw
+      servicePort: 3000
