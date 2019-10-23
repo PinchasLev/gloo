@@ -1,0 +1,71 @@
+apiVersion: gloo.solo.io/v1
+kind: Upstream
+metadata:
+  name: petstore-petstore-4000
+  namespace: gloo-system
+spec:
+  upstreamSpec:
+    kube:
+      selector:
+        app: petstore
+      serviceName: petstore
+      serviceNamespace: petstore
+      servicePort: 4000
+      serviceSpec:
+        rest:
+          swaggerInfo:
+            url: http://petstore.petstore.svc.cluster.local:4000/swagger.json
+          transformations:
+            addPet:
+              body:
+                text: '{"id": {{ default(id, "") }},"name": "{{ default(name, "")}}","tag":
+                  "{{ default(tag, "")}}"}'
+              headers:
+                :method:
+                  text: POST
+                :path:
+                  text: /api/pets
+                content-type:
+                  text: application/json
+            deletePet:
+              headers:
+                :method:
+                  text: DELETE
+                :path:
+                  text: /api/pets/{{ default(id, "") }}
+                content-type:
+                  text: application/json
+            findPetById:
+              body: {}
+              headers:
+                :method:
+                  text: GET
+                :path:
+                  text: /api/pets/{{ default(id, "") }}
+                content-length:
+                  text: "0"
+                content-type: {}
+                transfer-encoding: {}
+            findPets:
+              body: {}
+              headers:
+                :method:
+                  text: GET
+                :path:
+                  text: /api/pets?tags={{default(tags, "")}}&limit={{default(limit,
+                    "")}}
+                content-length:
+                  text: "0"
+                content-type: {}
+                transfer-encoding: {}
+    healthChecks:
+    - healthyThreshold: 1
+      httpHealthCheck:
+        path: /health
+      interval: 5s
+      timeout: 1s
+      unhealthyInterval: 5s
+      unhealthyThreshold: 3
+    loadBalancerConfig:
+      maglev: {}
+      healthyPanicThreshold: 0
