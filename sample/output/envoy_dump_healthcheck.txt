@@ -1,0 +1,26 @@
+{ 
+          "version_info": "6628392167814984373", 
+          "cluster": { 
+            "name": "hw-hw-3000_heptio-contour", 
+            "type": "EDS", 
+            "eds_cluster_config": { 
+              "eds_config": { 
+              "ads": {} 
+          } 
+       }, 
+       "connect_timeout": "5s", 
+       "lb_policy": "MAGLEV", 
+       "health_checks": [ 
+         { 
+           "timeout": "1s", 
+           "interval": "5s", 
+           "unhealthy_threshold": 3, 
+           "healthy_threshold": 1, 
+           "http_health_check": { 
+             "path": "/health" 
+           }, 
+           "unhealthy_interval": "5s" 
+ } 
+       ], 
+       "http2_protocol_options": {}, 
+       "metadata": {} 

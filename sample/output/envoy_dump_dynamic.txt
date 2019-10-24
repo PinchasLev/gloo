@@ -1,0 +1,29 @@
+{ 
+       "name": "heptio-contour_ping-pong-faults", 
+       "domains": [ 
+         "ping.pong.faults.service" 
+       ], 
+       "routes": [ 
+       { 
+         "match": { 
+           "prefix": "/" 
+         }, 
+         "route": { 
+           "cluster": "hw-hw-3000_heptio-contour", 
+           "timeout": "0.000000003s" 
+         }, 
+         "per_filter_config": { 
+           "envoy.fault": { 
+             "delay": { 
+               "fixed_delay": "10s", 
+               "percentage": { 
+                 "denominator": "MILLION", 
+                 "numerator": 1000000 
+               } 
+             } 
+           } 
+         } 
+       } 
+       ] 
+     }, 
+ 
