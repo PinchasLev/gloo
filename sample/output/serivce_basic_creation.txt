@@ -1,0 +1,26 @@
+kubectl -n hw-basic get service hw-basic -o yaml 
+apiVersion: v1 
+kind: Service 
+metadata: 
+  annotations: 
+    kubectl.kubernetes.io/last-applied-configuration: | 
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"hw-basic","namespace":"hw-basic"},"spec":{"clusterIP":"None","ports":[{"port":3000,"targetPort":8080}],"selector":{"app":"hw-basic"}}} 
+  creationTimestamp: "2019-10-02T23:04:24Z" 
+  name: hw-basic 
+  namespace: hw-basic 
+  resourceVersion: "135992" 
+  selfLink: /api/v1/namespaces/hw-basic/services/hw-basic 
+  uid: 20d9ddba-23af-44c6-81ca-0317b83f2d45 
+spec: 
+  clusterIP: None 
+  ports: 
+  - port: 3333 
+      protocol: TCP 
+      targetPort: 3000 
+  selector: 
+    app: hw-basic 
+  sessionAffinity: None 
+  type: ClusterIP 
+status: 
+  loadBalancer: {} 
+ 

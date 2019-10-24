@@ -1,0 +1,29 @@
+kubectl -n gloo-system get upstream hw-basic-hw-basic-3333 -o yaml 
+apiVersion: gloo.solo.io/v1 
+kind: Upstream 
+metadata: 
+  annotations: 
+    kubectl.kubernetes.io/last-applied-configuration: | 
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"hw-basic","namespace":"hw-basic"},"spec":{"clusterIP":"None","ports":[{"port":3000,"targetPort":8080}],"selector":{"app":"hw-basic"}}} 
+  creationTimestamp: "2019-10-02T23:17:11Z" 
+  generation: 2 
+  labels: 
+    discovered_by: kubernetesplugin 
+  name: hw-basic-hw-basic-3333 
+  namespace: gloo-system 
+  resourceVersion: "136000" 
+  selfLink: /apis/gloo.solo.io/v1/namespaces/gloo-system/upstreams/hw-basic-hw-basic-3333 
+  uid: 75023e25-a434-42b0-b1bf-7222a4a4b596 
+spec: 
+  discoveryMetadata: {} 
+  upstreamSpec: 
+    kube: 
+      selector: 
+        app: hw-basic 
+      serviceName: hw-basic 
+      serviceNamespace: hw-basic 
+      servicePort: 3333 
+status: 
+  reported_by: gloo 
+    state: 1 
+ 
