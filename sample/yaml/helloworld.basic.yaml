@@ -1,0 +1,102 @@
+---
+{
+   "apiVersion": "v1",
+   "kind": "Namespace",
+   "metadata": {
+      "name": "hw-basic",
+      "namespace": "hw-basic"
+   }
+}
+---
+{
+   "apiVersion": "v1",
+   "kind": "Service",
+   "metadata": {
+      "name": "hw-basic",
+      "namespace": "hw-basic"
+   },
+   "spec": {
+      "clusterIP": None,
+      "ports": [
+         {
+            "port": 3333,
+            "targetPort": 3000
+         }
+      ],
+      "selector": {
+         "app": "hw-basic"
+      }
+   }
+}
+---
+{
+   "apiVersion": "apps/v1",
+   "kind": "Deployment",
+   "metadata": {
+      "labels": {
+         "app": "hw-basic"
+      },
+      "name": "hw-basic",
+      "namespace": "hw-basic"
+   },
+   "spec": {
+      "replicas": 6,
+      "selector": {
+         "matchLabels": {
+            "app": "hw-basic"
+         }
+      },
+      "strategy": {
+         "rollingUpdate": {
+            "maxUnavailable": "10%"
+         },
+         "type": "RollingUpdate"
+      },
+      "template": {
+         "metadata": {
+            "labels": {
+               "app": "hw-basic"
+            },
+            "namespace": "hw-basic"
+         },
+         "spec": {
+            "containers": [
+               {
+                  "env": [
+                     {
+                        "name": "SIZE_RESPONSE_LEN",
+                        "value": "10485760"
+                     }
+                  ],
+                  "image": "phylake/hellohttp:1566592100",
+                  "imagePullPolicy": "Always",
+                  "lifecycle": {
+                     "preStop": {
+                        "exec": {
+                           "command": [
+                              "/bin/sh",
+                              "-c",
+                              "sleep 60"
+                           ]
+                        }
+                     }
+                  },
+                  "name": "hellohttp",
+                  "ports": [
+                     {
+                        "containerPort": 3000
+                     }
+                  ],
+                  "resources": {
+                     "requests": {
+                        "cpu": 1,
+                        "memory": "2049Mi"
+                     }
+                  }
+               }
+            ],
+            "terminationGracePeriodSeconds": 60
+         }
+      }
+   }
+}
