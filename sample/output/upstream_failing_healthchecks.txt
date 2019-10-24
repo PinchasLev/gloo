@@ -1,0 +1,15 @@
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" http://lev-or2-k8s-pub2-0-d9f7cb061b1448cf.elb.us-west-2.amazonaws.com:/ 
+ 
+PONG 
+ 
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" http://lev-or2-k8s-pub2-0-d9f7cb061b1448cf.elb.us-west-2.amazonaws.com:/ 
+ 
+PONG 
+ 
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" http://lev-or2-k8s-pub2-0-d9f7cb061b1448cf.elb.us-west-2.amazonaws.com:/ 
+ 
+PONG 
+ 
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" http://lev-or2-k8s-pub2-0-d9f7cb061b1448cf.elb.us-west-2.amazonaws.com:/ 
+ 
+no healthy upstream 

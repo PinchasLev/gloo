@@ -1,0 +1,13 @@
+kubectl -n petstore logs pod/petstore-5f47b7758d-6twf8 
+/home/ilackarms/gloo-gopath/src/github.com/go-swagger/go-swagger/examples/2.0/petstore/server/petstore.go:33 
+Request: GET /health HTTP/1.1 
+Host: petstore-petstore-4000_gloo-system 
+Content-Length: 0 
+User-Agent: Envoy/HC 
+ 
+ 
+/home/ilackarms/gloo-gopath/src/github.com/go-swagger/go-swagger/examples/2.0/petstore/server/petstore.go:33 
+Request: GET /health HTTP/1.1 
+Host: petstore-petstore-4000_gloo-system 
+Content-Length: 0 
+User-Agent: Envoy/HC 

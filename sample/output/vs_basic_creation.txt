@@ -1,0 +1,34 @@
+kubectl -n gloo-system get vs ping-pong-basic -o yaml 
+apiVersion: gateway.solo.io/v1 
+kind: VirtualService 
+metadata: 
+  annotations: 
+    kubectl.kubernetes.io/last-applied-configuration: | 
+      {"apiVersion":"gateway.solo.io/v1","kind":"VirtualService","metadata":{"annotations":{},"name":"ping-pong-basic","namespace":"gloo-system"},"spec":{"virtualHost":{"domains":["ping.pong.basic.service"],"routes":[{"matcher":{"prefix":"/"},"routeAction":{"single":{"upstream":{"name":"hw-basic-hw-basic-3000","namespace":"gloo-system"}}},"routePlugins":null}]}}} 
+  creationTimestamp: "2019-10-02T22:36:55Z" 
+resourceVersion: "136438" 
+  selfLink: /apis/gateway.solo.io/v1/namespaces/gloo-system/virtualservices/ping-pong-basic 
+uid: 851be947-70ec-45a6-80d9-41b89cb7e08b 
+  generation: 7 
+  name: ping-pong-basic 
+  namespace: gloo-system 
+   
+spec: 
+  virtualHost: 
+    domains: 
+    - ping.pong.basic.service 
+    routes: 
+    - matcher: 
+        prefix: / 
+      routeAction: 
+        single: 
+          upstream: 
+            name: hw-basic-hw-basic-3333 
+            namespace: gloo-system 
+status: 
+  reported_by: gateway 
+  state: 1 
+  subresource_statuses: 
+    '*v1.Proxy gloo-system gateway-proxy-v2': 
+      reported_by: gloo 
+     state: 1 
