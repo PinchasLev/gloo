@@ -1,0 +1,87 @@
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" lev-sbx-or2-k8s-pub2-0-26c91c36a304d450.elb.us-west-2.amazonaws.com:/api/pets 
+ 
+PONG 
+ 
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" lev-sbx-or2-k8s-pub2-0-26c91c36a350.elb.us-west-2.amazonaws.com:/api/pets 
+ 
+PONG 
+ 
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" lev-sbx-or2-k8s-pub2-0-26c91c36a350.elb.us-west-2.amazonaws.com:/api/pets 
+ 
+PONG 
+ 
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" lev-sbx-or2-k8s-pub2-0-26c91c36a350.elb.us-west-2.amazonaws.com:/api/pets 
+ 
+PONG 
+ 
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" lev-sbx-or2-k8s-pub2-0-26c91c36a350.elb.us-west-2.amazonaws.com:/api/pets 
+ 
+PONG 
+ 
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" lev-sbx-or2-k8s-pub2-0-26c91c36a350.elb.us-west-2.amazonaws.com:/api/pets 
+ 
+PONG 
+ 
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" lev-sbx-or2-k8s-pub2-0-26c91c36a350.elb.us-west-2.amazonaws.com:/api/pets 
+ 
+PONG 
+ 
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" lev-sbx-or2-k8s-pub2-0-26c91c36a350.elb.us-west-2.amazonaws.com:/api/pets 
+ 
+PONG 
+ 
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" lev-sbx-or2-k8s-pub2-0-26c91c36a350.elb.us-west-2.amazonaws.com:/api/pets 
+ 
+PONG 
+ 
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" lev-sbx-or2-k8s-pub2-0-26c91c36a350.elb.us-west-2.amazonaws.com:/api/pets 
+ 
+PONG 
+ 
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" lev-sbx-or2-k8s-pub2-0-26c91c36a350.elb.us-west-2.amazonaws.com:/api/pets 
+ 
+PONG 
+ 
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" lev-sbx-or2-k8s-pub2-0-26c91c36a350.elb.us-west-2.amazonaws.com:/api/pets 
+ 
+PONG 
+ 
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" lev-sbx-or2-k8s-pub2-0-26c91c36a350.elb.us-west-2.amazonaws.com:/api/pets 
+ 
+PONG 
+ 
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" lev-sbx-or2-k8s-pub2-0-26c91c36a350.elb.us-west-2.amazonaws.com:/api/pets 
+ 
+PONG 
+ 
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" lev-sbx-or2-k8s-pub2-0-26c91c36a350.elb.us-west-2.amazonaws.com:/api/pets 
+ 
+PONG 
+ 
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" lev-sbx-or2-k8s-pub2-0-26c91c36a350.elb.us-west-2.amazonaws.com:/api/pets 
+ 
+PONG 
+ 
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" lev-sbx-or2-k8s-pub2-0-26c91c36a350.elb.us-west-2.amazonaws.com:/api/pets 
+ 
+PONG 
+ 
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" lev-sbx-or2-k8s-pub2-0-26c91c36a350.elb.us-west-2.amazonaws.com:/api/pets 
+ 
+PONG 
+ 
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" lev-sbx-or2-k8s-pub2-0-26c91c36a350.elb.us-west-2.amazonaws.com:/api/pets 
+ 
+PONG 
+ 
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" lev-sbx-or2-k8s-pub2-0-26c91c36a350.elb.us-west-2.amazonaws.com:/api/pets 
+ 
+PONG 
+ 
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" lev-sbx-or2-k8s-pub2-0-26c91c36a350.elb.us-west-2.amazonaws.com:/api/pets 
+ 
+PONG 
+ 
+Pinchass-MacBook-Pro:k8s-infrastructure lev$ curl -X GET -H "Host:multi.service.com" lev-sbx-or2-k8s-pub2-0-26c91c36a350.elb.us-west-2.amazonaws.com:/api/pets 
+ 
+[{"id":1,"name":"Dog","status":"available"},{"id":2,"name":"Cat","status":"pending"}] 
